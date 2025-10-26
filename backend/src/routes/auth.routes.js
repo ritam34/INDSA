@@ -5,6 +5,9 @@ import { registerUser ,loginUser ,logoutUser, getUser} from './../controllers/au
 const router = express.Router();
 
 router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/logout', logoutUser);
+router.get('/user', getUser);
 
 
 export default router;

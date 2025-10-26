@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+
+# Generated or external folders
+src/generated/
+prisma/
+
+# Specific file you don't want formatted
+src/libs/judge0.lib.js

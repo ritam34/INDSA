@@ -231,4 +231,21 @@ export const deleteProblem = asyncHandler(async (req, res) => {
   }
 });
 
-export const getAllSlovedProblems = asyncHandler(async (req, res) => {});
+export const getAllSlovedProblems = asyncHandler(async (req, res) => {
+  try {
+    const userId = "e9ee970c-3546-4f92-92b6-71d571d898fa";
+    const problemSolved= await db.problemSolved.findMany({
+      where: {
+        userId
+      }
+    })
+    if (!problemSolved) {
+      throw new ApiError(404, "Problem not found");
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, problemSolved, "Solve Problem fetched successfully"));
+  } catch (error) {
+    throw new ApiError(500, error.message);
+  }
+});

@@ -5,6 +5,7 @@ import {
   getProblemsById,
   deleteProblem,
   updateProblem,
+  getAllSlovedProblems
 } from "../controllers/problem.controllers.js";
 
 const router = Router();
@@ -15,5 +16,7 @@ router
   .get(getProblemsById)
   .put(updateProblem)
   .delete(deleteProblem);
+
+router.route("/solved").get(getAllSlovedProblems);
 
 export default router;

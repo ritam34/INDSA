@@ -11,6 +11,7 @@ import {
 export const executeCode = asyncHandler(async (req, res) => {
   const { source_code, stdin, language_id, expected_output, problemId } =
     req.body;
+    const userId="e9ee970c-3546-4f92-92b6-71d571d898fa";
   try {
     if (
       !Array.isArray(stdin) ||
@@ -20,12 +21,12 @@ export const executeCode = asyncHandler(async (req, res) => {
     ) {
       throw new ApiError(400, "Invalid stdin or expected output format");
     }
-    // prepare judge0 subbmissions
+
+    // const userId = req.user.id;
     const judge0Submissions = stdin.map((input, index) => ({
       source_code,
       language_id,
       stdin: input,
-      // expected_output: expected_output[index],
     }));
     const submissionResults = await submitBatch(judge0Submissions);
     const tokens = submissionResults.map((s) => s.token);
@@ -52,7 +53,7 @@ export const executeCode = asyncHandler(async (req, res) => {
 
     const submission = await db.submission.create({
       data: {
-        userId: req.user.id,
+        userId,
         problemId,
         sourceCode: source_code,
         language: getJudge0LanguageName(language_id),
@@ -75,7 +76,7 @@ export const executeCode = asyncHandler(async (req, res) => {
     });
 
     if(allPassed){
-        await db.problemsSolved.upsert({
+        await db.problemSolved.upsert({
             where: {
                 userId_problemId: {
                     userId,
@@ -89,18 +90,34 @@ export const executeCode = asyncHandler(async (req, res) => {
             }
         });
     }
+    const testCaseResults = detailsResults.map((result) => ({
+        submissionId: submission.id,
+        testcase: result.testcase,
+        passed: result.passed,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        expectedOutput: result.expectedOutput,
+        compileOutput: result.compileOutput,
+        memory: result.memory,
+        time: result.time,
+        status: result.status
+      }));
 
-    // const problem = await db.problem.findUnique({
-    //     where: {
-    //         id: problemId,
-    //     },
-    // });
-    // if(!problem){
-    //     throw new ApiError(404, "Problem not found");
-    // }
+    await db.testcaseResult.createMany({
+      data: testCaseResults,
+    });
+
+    const submissionWithDetails = await db.submission.findUnique({
+      where: {
+        id: submission.id,
+      },
+      include: {
+        testcases: true,
+      },
+    })
     return res
       .status(200)
-      .json(new ApiResponse(200, results, "Code executed successfully"));
+      .json(new ApiResponse(200, submissionWithDetails, "Code executed successfully"));
   } catch (error) {
     throw new ApiError(500, error.message);
   }
