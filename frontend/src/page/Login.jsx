@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
-import {  Eye, EyeOff } from "lucide-react";
+import {  Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
+import {useAuthStore} from "../store/useAuthStore.js";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -13,6 +14,7 @@ const loginSchema = z.object({
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const {login,isLoggedIn}=useAuthStore();
 
   const {
     register,
@@ -22,8 +24,13 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit =async (data) => {
+    try {
+      await login(data);
+    } catch (error) {
+      console.log("Logged in failed:",error);
+      
+    }
   };
 
   return (
@@ -85,8 +92,12 @@ const Login = () => {
         )}
 
         {/* Submit Button */}
-        <button type="submit" className="btn btn-neutral mt-4 w-full">
-          Login
+        <button type="submit" disabled={isLoggedIn} className="btn btn-neutral mt-4 w-full">
+          {isLoggedIn ? (
+            <>
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+            </>
+          ) : "Login"}
         </button>
       </form>
 

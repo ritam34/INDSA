@@ -7,10 +7,12 @@ import Login from "./page/Login";
 import SignUp from "./page/SignUp";
 import "./App.css";
 import { useAuthStore } from "./store/useAuthStore.js";
-import {Loader} from "lucide-react";
+import { Loader } from "lucide-react";
+import Layout from "./layout/Layout.jsx";
 
 function App() {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const {checkAuth, isCheckingAuth } = useAuthStore();
+  const authUser=true
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -29,21 +31,14 @@ function App() {
   return (
     <>
       <div className="flex flex-col items-center min-h-screen">
-        
-          <Toaster className="alert alert-info" position="bottom-right" />
+        <Toaster position="bottom-right" />
         <Routes>
-          <Route
-            path="/"
-            element={authUser ? <Home /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/login"
-            element={authUser ? <Navigate to="/" /> : <Login />}
-          />
-          <Route
-            path="/signup"
-            element={authUser ? <Navigate to="/" /> : <SignUp />}
-          />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+          </Route>
+
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
         </Routes>
       </div>
     </>
