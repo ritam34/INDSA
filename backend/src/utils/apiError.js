@@ -21,3 +21,6 @@ class ApiError extends Error {
 }
 
 export { ApiError };
+
+// Usage examples:
+// throw new ApiError(400, "Invalid email format");
