@@ -1,5 +1,5 @@
 import express from 'express';
-import * as statsController from '../controllers/stats.controller.js';
+import * as statsController from '../controllers/stats.controllers.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { isAdmin } from '../middleware/role.middleware.js';
 
