@@ -1,17 +1,700 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                           String               @id @default(uuid())
+  fullName                     String
+  email                        String               @unique
+  password                     String
+  role                         UserRole             @default(USER)
+  createdAt                    DateTime             @default(now())
+  updatedAt                    DateTime             @updatedAt
+  avatar                       String               @default("https://placehold.jp/3e80b1/ffffff/300x300.png?text=IMAGE")
+  bio                          String?
+  deletedAt                    DateTime?
+  emailVerificationToken       String?
+  emailVerificationTokenExpiry DateTime?
+  forgotPasswordToken          String
+  forgotPasswordTokenExpiry    DateTime
+  github                       String?
+  isEmailVerified              Boolean              @default(false)
+  isPremium                    Boolean              @default(false)
+  linkedin                     String?
+  location                     String?
+  premiumExpiresAt             DateTime?
+  refreshToken                 String
+  refreshTokenExpiry           DateTime
+  username                     String               @unique
+  website                      String?
+  bookmarks                    Bookmark[]
+  comments                     Comment[]
+  commentVotes                 CommentVote[]
+  contestsCreated              Contest[]            @relation("ContestCreator")
+  contestParticipations        ContestParticipant[]
+  contestSubmissions           ContestSubmission[]
+  discussions                  Discussion[]
+  discussionVotes              DiscussionVote[]
+  notifications                Notification[]
+  notificationSettings         NotificationSetting?
+  playlists                    Playlist[]
+  problems                     Problem[]
+  problemAttempts              ProblemAttempt[]
+  problemsSolved               ProblemSolved[]
+  rateLimits                   RateLimit[]
+  solutions                    Solution[]
+  solutionVotes                SolutionVote[]
+  studyPlanProgress            StudyPlanProgress[]
+  submissions                  Submission[]
+  badges                       UserBadge[]
+  stats                        UserStats?
+
+  @@index([email])
+  @@index([username])
+  @@index([deletedAt])
+}
+
+model UserStats {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  easyProblemsSolved   Int       @default(0)
+  mediumProblemsSolved Int       @default(0)
+  hardProblemsSolved   Int       @default(0)
+  totalSubmissions     Int       @default(0)
+  acceptedSubmissions  Int       @default(0)
+  streak               Int       @default(0)
+  longestStreak        Int       @default(0)
+  lastSolvedDate       DateTime?
+  globalRanking        Int?
+  reputation           Int       @default(0)
+  contestRating        Int       @default(1500)
+  contestsParticipated Int       @default(0)
+  problemsContributed  Int       @default(0)
+  solutionsWritten     Int       @default(0)
+  discussionsStarted   Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Problem {
+  id                 String              @id @default(uuid())
+  title              String
+  description        String
+  difficulty         Difficulty
+  tags               String[]
+  userId             String
+  examples           Json
+  constraints        String
+  hints              String?
+  editorial          String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  acceptanceRate     Float               @default(0)
+  deletedAt          DateTime?
+  discussionCount    Int                 @default(0)
+  dislikes           Int                 @default(0)
+  isPremium          Boolean             @default(false)
+  isPublic           Boolean             @default(true)
+  likes              Int                 @default(0)
+  order              Int?
+  slug               String              @unique
+  solutionCount      Int                 @default(0)
+  status             ProblemStatus       @default(DRAFT)
+  submissionCount    Int                 @default(0)
+  totalAccepted      Int                 @default(0)
+  totalSubmissions   Int                 @default(0)
+  bookmarks          Bookmark[]
+  codeSnippets       CodeSnippet[]
+  companyTags        CompanyProblem[]
+  contestProblems    ContestProblem[]
+  contestSubmissions ContestSubmission[]
+  discussions        Discussion[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemAttempts    ProblemAttempt[]
+  problemInPlaylist  ProblemInPlaylist[]
+  problemsSolved     ProblemSolved[]
+  topicTags          ProblemTopic[]
+  referenceSolutions ReferenceSolution[]
+  solutions          Solution[]
+  studyPlanProblems  StudyPlanProblem[]
+  submissions        Submission[]
+  testCases          TestCase[]
+
+  @@index([userId])
+  @@index([difficulty])
+  @@index([status])
+  @@index([slug])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([order])
+}
+
+model TestCase {
+  id          String  @id @default(uuid())
+  problemId   String
+  input       String
+  output      String
+  explanation String?
+  isPublic    Boolean @default(true)
+  order       Int
+  weight      Int     @default(1)
+  problem     Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, order])
+  @@index([problemId])
+}
+
+model CodeSnippet {
+  id        String  @id @default(uuid())
+  problemId String
+  language  String
+  code      String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, language])
+  @@index([problemId])
+}
+
+model ReferenceSolution {
+  id          String  @id @default(uuid())
+  problemId   String
+  language    String
+  code        String
+  explanation String?
+  complexity  Json?
+  problem     Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+}
+
+model Submission {
+  id                 String              @id @default(uuid())
+  userId             String
+  problemId          String
+  sourceCode         String
+  language           String
+  stdin              String?
+  stdout             String?
+  stderr             String?
+  compileOutput      String?
+  memory             String?
+  time               String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  isPublic           Boolean             @default(false)
+  passedTests        Int                 @default(0)
+  score              Int                 @default(0)
+  totalTests         Int                 @default(0)
+  status             SubmissionStatus
+  contestSubmissions ContestSubmission[]
+  problem            Problem             @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testcases          TestcaseResult[]
+
+  @@index([userId, createdAt])
+  @@index([problemId, status])
+  @@index([status, createdAt])
+  @@index([userId, problemId])
+}
+
+model TestcaseResult {
+  id             String     @id @default(uuid())
+  submissionId   String
+  testcase       Int
+  passed         Boolean
+  stdout         String?
+  stderr         String?
+  expectedOutput String
+  compileOutput  String?
+  memory         String?
+  time           String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  status         String
+  actualOutput   String?
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+}
+
+model ProblemSolved {
+  id            String    @id @default(uuid())
+  userId        String
+  problemId     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bestMemory    String?
+  bestTime      String?
+  deletedAt     DateTime?
+  firstSolvedAt DateTime  @default(now())
+  totalAttempts Int       @default(1)
+  problem       Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+}
+
+model ProblemAttempt {
+  id            String   @id @default(uuid())
+  userId        String
+  problemId     String
+  attempts      Int      @default(1)
+  solved        Boolean  @default(false)
+  lastAttemptAt DateTime @default(now())
+  timeSpent     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  problem       Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+}
+
+model Playlist {
+  id          String              @id @default(uuid())
+  name        String
+  description String
+  isPublic    Boolean?            @default(true)
+  userId      String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+  followers   Int                 @default(0)
+  slug        String
+  thumbnail   String?
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problems    ProblemInPlaylist[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model ProblemInPlaylist {
+  id         String    @id @default(uuid())
+  playlistId String
+  problemId  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  notes      String?
+  order      Int
+  playlist   Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  problem    Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, problemId])
+  @@unique([playlistId, order])
+  @@index([playlistId])
+}
+
+model Discussion {
+  id        String           @id @default(uuid())
+  problemId String
+  userId    String
+  title     String
+  content   String
+  upvotes   Int              @default(0)
+  downvotes Int              @default(0)
+  views     Int              @default(0)
+  isPinned  Boolean          @default(false)
+  isLocked  Boolean          @default(false)
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  comments  Comment[]
+  problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes     DiscussionVote[]
+
+  @@index([problemId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id           String        @id @default(uuid())
+  discussionId String
+  userId       String
+  parentId     String?
+  content      String
+  upvotes      Int           @default(0)
+  downvotes    Int           @default(0)
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  discussion   Discussion    @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  parent       Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies      Comment[]     @relation("CommentReplies")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes        CommentVote[]
+
+  @@index([discussionId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model DiscussionVote {
+  id           String     @id @default(uuid())
+  userId       String
+  discussionId String
+  value        Int
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, discussionId])
+  @@index([discussionId])
+}
+
+model CommentVote {
+  id        String  @id @default(uuid())
+  userId    String
+  commentId String
+  value     Int
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+}
+
+model Solution {
+  id         String         @id @default(uuid())
+  problemId  String
+  userId     String
+  title      String
+  content    String
+  language   String
+  code       String
+  upvotes    Int            @default(0)
+  downvotes  Int            @default(0)
+  views      Int            @default(0)
+  isOfficial Boolean        @default(false)
+  complexity Json?
+  deletedAt  DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  problem    Problem        @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes      SolutionVote[]
+
+  @@index([problemId])
+  @@index([userId])
+  @@index([isOfficial])
+}
+
+model SolutionVote {
+  id         String   @id @default(uuid())
+  userId     String
+  solutionId String
+  value      Int
+  solution   Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+  @@index([solutionId])
+}
+
+model Company {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  slug      String           @unique
+  logo      String?
+  website   String?
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  problems  CompanyProblem[]
+
+  @@index([slug])
+}
+
+model CompanyProblem {
+  id        String    @id @default(uuid())
+  companyId String
+  problemId String
+  frequency Int       @default(1)
+  lastAsked DateTime?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, problemId])
+  @@index([companyId])
+  @@index([problemId])
+}
+
+model Topic {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  slug        String         @unique
+  description String?
+  icon        String?
+  deletedAt   DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  problems    ProblemTopic[]
+
+  @@index([slug])
+}
+
+model ProblemTopic {
+  id        String    @id @default(uuid())
+  problemId String
+  topicId   String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  topic     Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, topicId])
+  @@index([problemId])
+  @@index([topicId])
+}
+
+model Contest {
+  id           String               @id @default(uuid())
+  title        String
+  slug         String               @unique
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  duration     Int
+  isPublic     Boolean              @default(true)
+  isRated      Boolean              @default(true)
+  createdBy    String
+  deletedAt    DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  creator      User                 @relation("ContestCreator", fields: [createdBy], references: [id])
+  participants ContestParticipant[]
+  problems     ContestProblem[]
+  submissions  ContestSubmission[]
+
+  @@index([startTime])
+  @@index([slug])
+}
+
+model ContestProblem {
+  id        String  @id @default(uuid())
+  contestId String
+  problemId String
+  points    Int     @default(100)
+  order     Int
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, problemId])
+  @@unique([contestId, order])
+  @@index([contestId])
+}
+
+model ContestParticipant {
+  id         String    @id @default(uuid())
+  contestId  String
+  userId     String
+  score      Int       @default(0)
+  rank       Int?
+  finishTime DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  contest    Contest   @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+  @@index([contestId, score])
+  @@index([userId])
+}
+
+model ContestSubmission {
+  id           String     @id @default(uuid())
+  contestId    String
+  userId       String
+  problemId    String
+  submissionId String
+  points       Int        @default(0)
+  penalty      Int        @default(0)
+  createdAt    DateTime   @default(now())
+  contest      Contest    @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problem      Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([contestId, userId])
+  @@index([userId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  problemId String
+  notes     String?
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  slug        String      @unique
+  description String
+  icon        String
+  type        BadgeType
+  criteria    Json
+  rarity      String
+  points      Int         @default(0)
+  deletedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userBadges  UserBadge[]
+
+  @@index([type])
+  @@index([slug])
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model NotificationSetting {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  emailOnSubmission      Boolean  @default(true)
+  emailOnDiscussionReply Boolean  @default(true)
+  emailOnCommentReply    Boolean  @default(true)
+  emailOnContest         Boolean  @default(true)
+  emailOnAchievement     Boolean  @default(true)
+  emailOnSystemUpdate    Boolean  @default(true)
+  pushOnSubmission       Boolean  @default(false)
+  pushOnDiscussionReply  Boolean  @default(true)
+  pushOnCommentReply     Boolean  @default(true)
+  pushOnContest          Boolean  @default(true)
+  pushOnAchievement      Boolean  @default(true)
+  weeklyDigest           Boolean  @default(true)
+  marketingEmails        Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RateLimit {
+  id            String   @id @default(uuid())
+  userId        String
+  action        String
+  count         Int      @default(1)
+  windowStart   DateTime @default(now())
+  lastAttemptAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, action, windowStart])
+  @@index([userId, action])
+}
+
+model StudyPlan {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  slug        String              @unique
+  description String
+  thumbnail   String?
+  difficulty  Difficulty
+  duration    Int
+  isPublic    Boolean             @default(true)
+  isPremium   Boolean             @default(false)
+  order       Int?
+  enrollments Int                 @default(0)
+  deletedAt   DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  problems    StudyPlanProblem[]
+  progress    StudyPlanProgress[]
+
+  @@index([slug])
+  @@index([isPublic])
+}
+
+model StudyPlanProblem {
+  id          String    @id @default(uuid())
+  studyPlanId String
+  problemId   String
+  day         Int
+  order       Int
+  isOptional  Boolean   @default(false)
+  notes       String?
+  problem     Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  studyPlan   StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([studyPlanId, problemId])
+  @@unique([studyPlanId, day, order])
+  @@index([studyPlanId])
+}
+
+model StudyPlanProgress {
+  id                String    @id @default(uuid())
+  userId            String
+  studyPlanId       String
+  currentDay        Int       @default(1)
+  completedProblems Int       @default(0)
+  totalProblems     Int
+  startedAt         DateTime  @default(now())
+  lastActivityAt    DateTime  @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  studyPlan         StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, studyPlanId])
+  @@index([userId])
+  @@index([studyPlanId])
 }
 
 enum UserRole {
@@ -37,11 +720,13 @@ enum SubmissionStatus {
   JUDGING
   INTERNAL_ERROR
 }
+
 enum ProblemStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
 }
+
 enum NotificationType {
   SUBMISSION
   DISCUSSION
@@ -50,714 +735,11 @@ enum NotificationType {
   ACHIEVEMENT
   SYSTEM
 }
+
 enum BadgeType {
   PROBLEM_SOLVING
   STREAK
   CONTEST
   COMMUNITY
   SPECIAL
-}
-model User {
-  id                           String    @id @default(uuid())
-  name                         String
-  email                        String    @unique
-  username                     String    @unique
-  avatar                       String    @default("https://placehold.jp/3e80b1/ffffff/300x300.png?text=IMAGE")
-  password                     String
-  bio                          String?
-  location                     String?
-  website                      String?
-  github                       String?
-  linkedin                     String?
-  isEmailVerified              Boolean   @default(false)
-  emailVerificationToken       String?
-  emailVerificationTokenExpiry DateTime?
-  refreshToken                 String
-  refreshTokenExpiry           DateTime
-  forgotPasswordToken          String
-  forgotPasswordTokenExpiry    DateTime
-  role                         UserRole  @default(USER)
-  isPremium                    Boolean   @default(false)
-  premiumExpiresAt             DateTime?
-  deletedAt                    DateTime?
-  createdAt                    DateTime  @default(now())
-  updatedAt                    DateTime  @updatedAt
-
-  // Relations
-  problems              Problem[]
-  submissions           Submission[]
-  problemsSolved        ProblemSolved[]
-  playlists             Playlist[]
-  stats                 UserStats?
-  discussions           Discussion[]
-  comments              Comment[]
-  discussionVotes       DiscussionVote[]
-  commentVotes          CommentVote[]
-  solutions             Solution[]
-  solutionVotes         SolutionVote[]
-  bookmarks             Bookmark[]
-  problemAttempts       ProblemAttempt[]
-  contestsCreated       Contest[]              @relation("ContestCreator")
-  contestParticipations ContestParticipant[]
-  contestSubmissions    ContestSubmission[]
-  badges                UserBadge[]
-  notifications         Notification[]
-  notificationSettings  NotificationSetting?
-  rateLimits            RateLimit[]
-  studyPlanProgress     StudyPlanProgress[]
-
-  @@index([email])
-  @@index([username])
-  @@index([deletedAt])
-}
-model UserStats {
-  id                     String    @id @default(uuid())
-  userId                 String    @unique
-  easyProblemsSolved     Int       @default(0)
-  mediumProblemsSolved   Int       @default(0)
-  hardProblemsSolved     Int       @default(0)
-  totalSubmissions       Int       @default(0)
-  acceptedSubmissions    Int       @default(0)
-  streak                 Int       @default(0)
-  longestStreak          Int       @default(0)
-  lastSolvedDate         DateTime?
-  globalRanking          Int?
-  reputation             Int       @default(0)
-  contestRating          Int       @default(1500)
-  contestsParticipated   Int       @default(0)
-  problemsContributed    Int       @default(0)
-  solutionsWritten       Int       @default(0)
-  discussionsStarted     Int       @default(0)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-model Problem {
-  id               String     @id @default(uuid())
-  title            String
-  slug             String     @unique
-  description      String
-  difficulty       Difficulty
-  tags             String[]
-  userId           String
-  examples         Json
-  constraints      String
-  hints            String?
-  editorial        String?
-  isPublic         Boolean    @default(true)
-  isPremium        Boolean    @default(false)
-  status           ProblemStatus @default(DRAFT)
-  order            Int?
-  acceptanceRate   Float      @default(0)
-  totalSubmissions Int        @default(0)
-  totalAccepted    Int        @default(0)
-  submissionCount Int @default(0)
-  discussionCount Int @default(0)
-  solutionCount   Int @default(0)
-  likes           Int           @default(0)
-  dislikes        Int           @default(0)
-  deletedAt       DateTime? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // For judge0
-  // testcases          Json
-  // codeSnippets       Json
-  // referenceSolutions Json 
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Relations
-  testCases           TestCase[]
-  codeSnippets        CodeSnippet[]
-  referenceSolutions  ReferenceSolution[]
-  submissions         Submission[]
-  problemsSolved      ProblemSolved[]
-  problemInPlaylist   ProblemInPlaylist[]
-  discussions         Discussion[]
-  solutions           Solution[]
-  bookmarks           Bookmark[]
-  problemAttempts     ProblemAttempt[]
-  companyTags         CompanyProblem[]
-  topicTags           ProblemTopic[]
-  contestProblems     ContestProblem[]
-  contestSubmissions  ContestSubmission[]
-  studyPlanProblems   StudyPlanProblem[]
-
-  @@index([userId])
-  @@index([difficulty])
-  @@index([status])
-  @@index([slug])
-  @@index([deletedAt])
-  @@index([createdAt])
-  @@index([order])
-}
-model TestCase {
-  id          String  @id @default(uuid())
-  problemId   String
-  input       String
-  output      String
-  explanation String?
-  isPublic    Boolean @default(true) // Public vs hidden test cases
-  order       Int
-  weight      Int     @default(1) // For weighted scoring
-
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([problemId, order])
-  @@index([problemId])
-}
-model CodeSnippet {
-  id        String @id @default(uuid())
-  problemId String
-  language  String
-  code      String
-
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([problemId, language])
-  @@index([problemId])
-}
-model ReferenceSolution {
-  id          String @id @default(uuid())
-  problemId   String
-  language    String
-  code        String
-  explanation String?
-  complexity  Json? // { time: "O(n)", space: "O(1)" }
-
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@index([problemId])
-}
-model Submission {
-  id            String  @id @default(uuid())
-  userId        String
-  problemId     String
-  sourceCode    String
-  language      String
-  stdin         String?
-  stdout        String?
-  stderr        String?
-  compileOutput String?
-  status        SubmissionStatus
-  memory        String?
-  time          String?
-  score          Int              @default(0)
-  passedTests    Int              @default(0)
-  totalTests     Int              @default(0)
-  isPublic       Boolean          @default(false) 
-  deletedAt      DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  testcases TestcaseResult[]
-  contestSubmissions ContestSubmission[]
-
-  @@index([userId, createdAt])
-  @@index([problemId, status])
-  @@index([status, createdAt])
-  @@index([userId, problemId])
-}
-model TestcaseResult {
-  id             String  @id @default(uuid())
-  submissionId   String
-  testcase       Int
-  passed         Boolean
-  stdout         String?
-  stderr         String?
-  expectedOutput String
-  actualOutput   String?
-  compileOutput  String?
-  memory         String?
-  time           String?
-  status         String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-
-  @@index([submissionId])
-}
-model ProblemSolved {
-  id        String @id @default(uuid())
-  userId    String
-  problemId String
-  firstSolvedAt     DateTime  @default(now())
-  bestTime          String?
-  bestMemory        String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  totalAttempts     Int       @default(1)
-  deletedAt         DateTime?
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, problemId])
-  @@index([userId])
-  @@index([problemId])
-}
-model ProblemAttempt {
-  id            String   @id @default(uuid())
-  userId        String
-  problemId     String
-  attempts      Int      @default(1)
-  solved        Boolean  @default(false)
-  lastAttemptAt DateTime @default(now())
-  timeSpent     Int      @default(0) // in seconds
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, problemId])
-  @@index([userId])
-}
-model Playlist {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String
-  description String
-  isPublic    Boolean? @default(true)
-  userId      String
-  thumbnail   String?
-  followers   Int       @default(0)
-  deletedAt   DateTime? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problems ProblemInPlaylist[]
-
-  @@unique([userId, slug])
-  @@index([userId])
-  @@index([isPublic])
-}
-model ProblemInPlaylist {
-  id         String @id @default(uuid())
-  playlistId String
-  problemId  String
-  order      Int
-  notes      String?
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  problem  Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([playlistId, problemId])
-  @@unique([playlistId, order])
-  @@index([playlistId])
-}
-model Discussion {
-  id        String   @id @default(uuid())
-  problemId String
-  userId    String
-  title     String
-  content   String
-  upvotes   Int      @default(0)
-  downvotes Int       @default(0)
-  views     Int      @default(0)
-  isPinned  Boolean   @default(false)
-  isLocked  Boolean   @default(false)
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  problem  Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments Comment[]
-  votes    DiscussionVote[]
-
-  @@index([problemId])
-  @@index([userId])
-  @@index([createdAt])
-}
-model Comment {
-  id           String   @id @default(uuid())
-  discussionId String
-  userId       String
-  parentId     String? // For nested comments
-  content      String
-  upvotes      Int      @default(0)
-  downvotes    Int      @default(0)
-  deletedAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  discussion Discussion    @relation(fields: [discussionId], references: [id], onDelete: Cascade)
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
-  replies    Comment[]     @relation("CommentReplies")
-  votes      CommentVote[]
-
-  @@index([discussionId])
-  @@index([userId])
-  @@index([parentId])
-}
-model DiscussionVote {
-  id           String @id @default(uuid())
-  userId       String
-  discussionId String
-  value        Int // 1 for upvote, -1 for downvote
-
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  discussion Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, discussionId])
-  @@index([discussionId])
-}
-model CommentVote {
-  id        String @id @default(uuid())
-  userId    String
-  commentId String
-  value     Int
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, commentId])
-  @@index([commentId])
-}
-model Solution {
-  id          String   @id @default(uuid())
-  problemId   String
-  userId      String
-  title       String
-  content     String   // Markdown
-  language    String
-  code        String
-  upvotes     Int      @default(0)
-  downvotes   Int      @default(0)
-  views       Int      @default(0)
-  isOfficial  Boolean  @default(false)
-  complexity  Json? // { time: "O(n)", space: "O(1)" }
-  deletedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  problem Problem       @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes   SolutionVote[]
-
-  @@index([problemId])
-  @@index([userId])
-  @@index([isOfficial])
-}
-model SolutionVote {
-  id         String @id @default(uuid())
-  userId     String
-  solutionId String
-  value      Int    // 1 or -1
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, solutionId])
-  @@index([solutionId])
-}
-// ==================== COMPANY & TOPIC MODELS ====================
-model Company {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  slug      String   @unique
-  logo      String?
-  website   String?
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  problems CompanyProblem[]
-  @@index([slug])
-}
-model CompanyProblem {
-  id         String   @id @default(uuid())
-  companyId  String
-  problemId  String
-  frequency  Int      @default(1)  // How often asked
-  lastAsked  DateTime?
-
-  deletedAt  DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([companyId, problemId])
-  @@index([companyId])
-  @@index([problemId])
-}
-model Topic {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  slug        String  @unique
-  description String?
-  icon        String?
-  deletedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  problems ProblemTopic[]
-
-  @@index([slug])
-}
-model ProblemTopic {
-  id        String @id @default(uuid())
-  problemId String
-  topicId   String
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@unique([problemId, topicId])
-  @@index([problemId])
-  @@index([topicId])
-}
-model Contest {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  description String?
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int      // in minutes
-  isPublic    Boolean  @default(true)
-  isRated     Boolean   @default(true)
-  createdBy   String
-  deletedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  creator      User @relation("ContestCreator",fields: [createdBy], references: [id])
-  problems     ContestProblem[]
-  participants ContestParticipant[]
-  submissions  ContestSubmission[]
-
-  @@index([startTime])
-  @@index([slug])
-}
-model ContestProblem {
-  id        String @id @default(uuid())
-  contestId String
-  problemId String
-  points    Int    @default(100)
-  order     Int
-
-  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([contestId, problemId])
-  @@unique([contestId, order])
-  @@index([contestId])
-}
-model ContestParticipant {
-  id        String   @id @default(uuid())
-  contestId String
-  userId    String
-  score     Int      @default(0)
-  rank      Int?
-  finishTime DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([contestId, userId])
-  @@index([contestId, score])
-  @@index([userId])
-}
-model ContestSubmission {
-  id           String   @id @default(uuid())
-  contestId    String
-  userId       String
-  problemId    String
-  submissionId String
-  points       Int      @default(0)
-  penalty      Int      @default(0)
-  createdAt    DateTime @default(now())
-
-  contest    Contest    @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem    Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-
-  @@index([contestId, userId])
-  @@index([userId])
-}
-model Bookmark {
-  id        String   @id @default(uuid())
-  userId    String
-  problemId String
-  notes     String?
-  tags      String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, problemId])
-  @@index([userId])
-}
-// ==================== BADGE & ACHIEVEMENT MODELS ====================
-model Badge {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  description String
-  icon        String
-  type        BadgeType
-  criteria    Json // { type: "problems_solved", value: 100, difficulty: "EASY" }
-  rarity      String // COMMON, RARE, EPIC, LEGENDARY
-  points      Int       @default(0)
-  deletedAt   DateTime? // Soft delete
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  userBadges UserBadge[]
-
-  @@index([type])
-  @@index([slug])
-}
-model UserBadge {
-  id        String   @id @default(uuid())
-  userId    String
-  badgeId   String
-  earnedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, badgeId])
-  @@index([userId])
-  @@index([badgeId])
-}
-// ==================== NOTIFICATION MODELS ====================
-model Notification {
-  id        String           @id @default(uuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  data      Json? // Additional data for the notification
-  isRead    Boolean          @default(false)
-  link      String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, isRead])
-  @@index([createdAt])
-}
-model NotificationSetting {
-  id                       String  @id @default(uuid())
-  userId                   String  @unique
-  emailOnSubmission        Boolean @default(true)
-  emailOnDiscussionReply   Boolean @default(true)
-  emailOnCommentReply      Boolean @default(true)
-  emailOnContest           Boolean @default(true)
-  emailOnAchievement       Boolean @default(true)
-  emailOnSystemUpdate      Boolean @default(true)
-  pushOnSubmission         Boolean @default(false)
-  pushOnDiscussionReply    Boolean @default(true)
-  pushOnCommentReply       Boolean @default(true)
-  pushOnContest            Boolean @default(true)
-  pushOnAchievement        Boolean @default(true)
-  weeklyDigest             Boolean @default(true)
-  marketingEmails          Boolean @default(false)
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-// ==================== RATE LIMITING MODEL ====================
-model RateLimit {
-  id            String   @id @default(uuid())
-  userId        String
-  action        String // "submission", "discussion", "comment"
-  count         Int      @default(1)
-  windowStart   DateTime @default(now())
-  lastAttemptAt DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, action, windowStart])
-  @@index([userId, action])
-}
-// ==================== STUDY PLAN MODELS ====================
-model StudyPlan {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  description String
-  thumbnail   String?
-  difficulty  Difficulty
-  duration    Int // in days
-  isPublic    Boolean   @default(true)
-  isPremium   Boolean   @default(false)
-  order       Int?
-  enrollments Int       @default(0)
-  deletedAt   DateTime? // Soft delete
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  problems StudyPlanProblem[]
-  progress StudyPlanProgress[]
-
-  @@index([slug])
-  @@index([isPublic])
-}
-model StudyPlanProblem {
-  id          String  @id @default(uuid())
-  studyPlanId String
-  problemId   String
-  day         Int
-  order       Int
-  isOptional  Boolean @default(false)
-  notes       String?
-
-  studyPlan StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
-  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  @@unique([studyPlanId, problemId])
-  @@unique([studyPlanId, day, order])
-  @@index([studyPlanId])
-}
-model StudyPlanProgress {
-  id                String   @id @default(uuid())
-  userId            String
-  studyPlanId       String
-  currentDay        Int      @default(1)
-  completedProblems Int      @default(0)
-  totalProblems     Int
-  startedAt         DateTime @default(now())
-  lastActivityAt    DateTime @default(now())
-  completedAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studyPlan StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, studyPlanId])
-  @@index([userId])
-  @@index([studyPlanId])
 }
