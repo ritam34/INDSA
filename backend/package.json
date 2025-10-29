@@ -4,8 +4,16 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon -r dotenv/config src/server.js dotenv_config_path=.env.development",
+    "start": "node -r dotenv/config src/server.js dotenv_config_path=.env.production",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "dotenv -e .env.development -- npx prisma studio",
+    "prisma:studio:prod": "dotenv -e .env.production -- npx prisma studio",
+    "db:migrate:dev": "dotenv -e .env.development -- npx prisma migrate dev",
+    "db:migrate:prod": "dotenv -e .env.production -- npx prisma migrate deploy",
+    "db:push:dev": "dotenv -e .env.development -- npx prisma db push",
+    "db:seed": "dotenv -e .env.development -- node src/prisma/seed.js",
+    "db:reset:dev": "dotenv -e .env.development -- npx prisma migrate reset"
   },
   "keywords": [],
   "author": "",
@@ -15,15 +23,21 @@
     "@prisma/client": "^6.17.1",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-validator": "^7.3.0",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "prettier": "^3.6.2",
-    "prisma": "^6.17.1"
+    "prisma": "^6.17.1",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.10"
   }
 }
