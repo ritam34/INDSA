@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.config.js';
 import { ApiError } from '../utils/apiError.js';
-import { executeCode, executeCodeWithTestCases, getLanguageId } from './judge.service.js';
+import { executeCode, executeCodeWithTestCases } from './judge.service.js';
+// getLanguageId not found
 import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
 import { updateUserStatsAfterSubmission } from './stats.service.js';
 import logger from '../utils/logger.js';
