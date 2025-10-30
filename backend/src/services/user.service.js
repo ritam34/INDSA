@@ -12,7 +12,7 @@ export const getUserProfile = async (username, currentUserId = null) => {
     },
     select: {
       id: true,
-      name: true,
+      fullName: true,
       username: true,
       email: currentUserId ? true : false,
       avatar: true,
@@ -63,7 +63,7 @@ export const getCurrentUser = async (userId) => {
     },
     select: {
       id: true,
-      name: true,
+      fullName: true,
       username: true,
       email: true,
       avatar: true,
@@ -113,7 +113,7 @@ export const updateProfile = async (userId, updateData) => {
     },
     select: {
       id: true,
-      name: true,
+      fullName: true,
       username: true,
       email: true,
       avatar: true,
@@ -396,7 +396,7 @@ export const getAllUsers = async (filters) => {
     deletedAt: null,
     ...(search && {
       OR: [
-        { name: { contains: search, mode: 'insensitive' } },
+        { fullName: { contains: search, mode: 'insensitive' } },
         { username: { contains: search, mode: 'insensitive' } }
       ]
     })
@@ -414,7 +414,7 @@ export const getAllUsers = async (filters) => {
       where,
       select: {
         id: true,
-        name: true,
+        fullName: true,
         username: true,
         avatar: true,
         location: true,
@@ -468,7 +468,7 @@ export const getUserBadges = async (username) => {
       badge: {
         select: {
           id: true,
-          name: true,
+          fullName: true,
           slug: true,
           description: true,
           icon: true,
