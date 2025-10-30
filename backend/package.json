@@ -6,14 +6,17 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config src/server.js dotenv_config_path=.env.development",
     "start": "node -r dotenv/config src/server.js dotenv_config_path=.env.production",
+    
     "prisma:generate": "prisma generate",
-    "prisma:studio": "dotenv -e .env.development -- npx prisma studio",
-    "prisma:studio:prod": "dotenv -e .env.production -- npx prisma studio",
-    "db:migrate:dev": "dotenv -e .env.development -- npx prisma migrate dev",
-    "db:migrate:prod": "dotenv -e .env.production -- npx prisma migrate deploy",
-    "db:push:dev": "dotenv -e .env.development -- npx prisma db push",
-    "db:seed": "dotenv -e .env.development -- node src/prisma/seed.js",
-    "db:reset:dev": "dotenv -e .env.development -- npx prisma migrate reset"
+    "prisma:studio": "npx dotenv-cli -e .env.development -- npx prisma studio",
+    "prisma:studio:prod": "npx dotenv-cli -e .env.production -- npx prisma studio",
+    
+    "db:migrate:dev": "npx dotenv-cli -e .env.development -- npx prisma migrate dev",
+    "db:migrate:prod": "npx dotenv-cli -e .env.production -- npx prisma migrate deploy",
+    "db:push:dev": "npx dotenv-cli -e .env.development -- npx prisma db push",
+    "db:seed": "npx dotenv-cli -e .env.development -- node src/prisma/seed.js",
+    "db:reset:dev": "npx dotenv-cli -e .env.development -- npx prisma migrate reset",
+    "db:reset:prod": "npx dotenv-cli -e .env.production -- npx prisma migrate reset --skip-seed"
   },
   "keywords": [],
   "author": "",
