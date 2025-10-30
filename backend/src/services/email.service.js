@@ -14,7 +14,7 @@ const createTransporter = () => {
   });
 };
 
-export const sendVerificationEmail = async (email, name, token) => {
+export const sendVerificationEmail = async (email, fullName, token) => {
   try {
     const transporter = createTransporter();
     
@@ -26,7 +26,7 @@ export const sendVerificationEmail = async (email, name, token) => {
       subject: 'Verify Your Email Address',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Welcome to InDSA, ${name}! 🎉</h2>
+          <h2>Welcome to InDSA, ${fullName}! 🎉</h2>
           <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
           
           <div style="text-align: center; margin: 30px 0;">
@@ -46,7 +46,7 @@ export const sendVerificationEmail = async (email, name, token) => {
         </div>
       `,
       text: `
-        Welcome to InDSA, ${name}! 🎉
+        Welcome to InDSA, ${fullName}! 🎉
         
         Thank you for signing up. Please verify your email address by clicking the button below:
         ${verificationUrl}
@@ -68,7 +68,7 @@ export const sendVerificationEmail = async (email, name, token) => {
   }
 };
 
-export const sendPasswordResetEmail = async (email, name, token) => {
+export const sendPasswordResetEmail = async (email, fullName, token) => {
   try {
     const transporter = createTransporter();
     
@@ -81,7 +81,7 @@ export const sendPasswordResetEmail = async (email, name, token) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Password Reset Request</h2>
-          <p>Hi ${name},</p>
+          <p>Hi ${fullName},</p>
           <p>We received a request to reset your password. Click the button below to reset it:</p>
           
           <div style="text-align: center; margin: 30px 0;">
@@ -103,7 +103,7 @@ export const sendPasswordResetEmail = async (email, name, token) => {
       text: `
         Password Reset Request
         
-        Hi ${name},
+        Hi ${fullName},
         
         We received a request to reset your password. Click the button below to reset it:
         ${resetUrl}
@@ -125,7 +125,7 @@ export const sendPasswordResetEmail = async (email, name, token) => {
   }
 };
 
-export const sendWelcomeEmail = async (email, name) => {
+export const sendWelcomeEmail = async (email, fullName) => {
   try {
     const transporter = createTransporter();
     
@@ -135,7 +135,7 @@ export const sendWelcomeEmail = async (email, name) => {
       subject: 'Welcome to InDSA!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Welcome Aboard, ${name}! 🚀</h2>
+          <h2>Welcome Aboard, ${fullName}! 🚀</h2>
           <p>Your email has been verified successfully. You're all set to start solving problems!</p>
           
           <h3>What's Next?</h3>
@@ -158,7 +158,7 @@ export const sendWelcomeEmail = async (email, name) => {
         </div>
       `,
       text: `
-        Welcome Aboard, ${name}! 🚀
+        Welcome Aboard, ${fullName}! 🚀
         
         Your email has been verified successfully. You're all set to start solving problems!
         
