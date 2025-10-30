@@ -7,12 +7,16 @@ import {
   errorMiddleware,
   notFoundMiddleware,
 } from "./middleware/error.middleware.js";
+import logger from "./utils/logger.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
 import problemRoutes from "./routes/problem.routes.js";
-import logger from "./utils/logger.js";
+import discussionRoutes from './routes/discussion.routes.js';
+import playlistRoutes from './routes/playlist.routes.js';
+import solutionRoutes from './routes/solution.routes.js';
+
 
 const app = express();
 
@@ -50,6 +54,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/problems", problemRoutes);
+app.use('/api/discussions', discussionRoutes);
+app.use('/api/playlists', playlistRoutes);
+app.use('/api/solutions', solutionRoutes);
 
 app.use(notFoundMiddleware);
 
