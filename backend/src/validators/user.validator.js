@@ -1,12 +1,12 @@
 import Joi from 'joi';
 
 export const updateProfileSchema = Joi.object({
-  name: Joi.string()
+  fullName: Joi.string()
     .min(2)
     .max(50)
     .messages({
-      'string.min': 'Name must be at least 2 characters long',
-      'string.max': 'Name cannot exceed 50 characters'
+      'string.min': 'Full Name must be at least 2 characters long',
+      'string.max': 'Full Name cannot exceed 50 characters'
     }),
 
   username: Joi.string()
