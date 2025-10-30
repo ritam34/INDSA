@@ -22,16 +22,16 @@ model User {
   deletedAt                    DateTime?
   emailVerificationToken       String?
   emailVerificationTokenExpiry DateTime?
-  forgotPasswordToken          String
-  forgotPasswordTokenExpiry    DateTime
+  forgotPasswordToken          String?
+  forgotPasswordTokenExpiry    DateTime?
   github                       String?
   isEmailVerified              Boolean              @default(false)
   isPremium                    Boolean              @default(false)
   linkedin                     String?
   location                     String?
   premiumExpiresAt             DateTime?
-  refreshToken                 String
-  refreshTokenExpiry           DateTime
+  refreshToken                 String?
+  refreshTokenExpiry           DateTime?
   username                     String               @unique
   website                      String?
   bookmarks                    Bookmark[]
