@@ -41,7 +41,7 @@ export const updateBookmarkSchema = Joi.object({
 export const bookmarkQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  tags: Joi.string().allow(''), // Comma-separated tags
+  tags: Joi.string().allow(''),
   difficulty: Joi.string().valid('EASY', 'MEDIUM', 'HARD'),
   search: Joi.string().max(100).allow('')
 });
