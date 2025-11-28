@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const createProblemSchema = Joi.object({
   title: Joi.string()
@@ -107,10 +107,11 @@ export const createProblemSchema = Joi.object({
   isPremium: Joi.boolean().default(false),
   status: Joi.string()
     .valid('DRAFT', 'PUBLISHED', 'ARCHIVED')
-    .default('DRAFT')
+    .default('DRAFT'),
+  
+  validateTests: Joi.boolean().default(true) 
 });
 
-// check
 export const updateProblemSchema = Joi.object({
   title: Joi.string().min(3).max(200),
   description: Joi.string().min(10),
@@ -128,42 +129,53 @@ export const updateProblemSchema = Joi.object({
   editorial: Joi.string().allow(''),
   isPublic: Joi.boolean(),
   isPremium: Joi.boolean(),
-  status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED')
-}).min(1); 
+  status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED'),
+  validateTests: Joi.boolean().default(true)
+}).min(1);
 
 export const problemQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  difficulty: Joi.string().valid('EASY', 'MEDIUM', 'HARD'),
-  tags: Joi.string(), // Comma-separated tags
-  status: Joi.string().valid('DRAFT', 'PUBLISHED', 'ARCHIVED'),
-  search: Joi.string().max(100).allow(''),
+  difficulty: Joi.string().valid("EASY", "MEDIUM", "HARD"),
+  tags: Joi.string(),
+  status: Joi.string().valid("DRAFT", "PUBLISHED", "ARCHIVED"),
+  search: Joi.string().max(100).allow(""),
   sortBy: Joi.string()
-    .valid('title', 'difficulty', 'acceptance_rate', 'created_at', 'order')
-    .default('order'),
-  order: Joi.string().valid('asc', 'desc').default('asc')
+    .valid("title", "difficulty", "acceptance_rate", "created_at", "order")
+    .default("order"),
+  order: Joi.string().valid("asc", "desc").default("asc"),
 });
 
 export const problemSlugSchema = Joi.object({
-  slug: Joi.string().required()
+  slug: Joi.string().required(),
 });
 
 export const problemIdSchema = Joi.object({
-  id: Joi.string().uuid().required()
+  id: Joi.string().uuid().required(),
 });
 
 export const addTestCaseSchema = Joi.object({
   input: Joi.string().required(),
   output: Joi.string().required(),
-  explanation: Joi.string().allow(''),
+  explanation: Joi.string().allow(""),
   isPublic: Joi.boolean().default(false),
   order: Joi.number().integer().min(1).required(),
-  weight: Joi.number().integer().min(1).default(1)
+  weight: Joi.number().integer().min(1).default(1),
 });
 
 export const addCodeSnippetSchema = Joi.object({
   language: Joi.string()
-    .valid('javascript', 'python', 'java', 'cpp', 'c', 'csharp', 'go', 'rust', 'typescript')
+    .valid(
+      "javascript",
+      "python",
+      "java",
+      "cpp",
+      "c",
+      "csharp",
+      "go",
+      "rust",
+      "typescript",
+    )
     .required(),
-  code: Joi.string().required()
+  code: Joi.string().required(),
 });

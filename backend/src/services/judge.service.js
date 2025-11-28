@@ -21,7 +21,6 @@ export const submitToJudge0 = async (sourceCode, languageId, stdin = '', expecte
     };
 
     const response = await judge0Api.post('/submissions?base64_encoded=true&wait=false', submission);
-
     logger.info('Code submitted to Judge0', { token: response.data.token });
     
     return response.data.token;
