@@ -1,9 +1,9 @@
 import { prisma } from '../config/database.config.js';
 import { ApiError } from '../utils/apiError.js';
 import { executeCode, executeCodeWithTestCases } from './judge.service.js';
-// getLanguageId not found
 import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
 import { updateUserStatsAfterSubmission } from './stats.service.js';
+import { checkBadgesAfterSubmission } from '../hooks/badge.hooks.js';
 import logger from '../utils/logger.js';
 
 export const runCode = async (problemSlug, sourceCode, language, stdin, userId) => {
@@ -145,12 +145,32 @@ export const submitSolution = async (problemSlug, sourceCode, language, userId) 
             difficulty: true
           }
         },
-        testcaseResults: true
+        testcases: true
       }
     });
 
+    let newBadges = [];
     if (allPassed) {
-      await handleAcceptedSubmission(userId, problem.id, submission.id);
+      const isFirstSolve = await handleAcceptedSubmission(userId, problem.id, submission.id);
+      
+      try {
+        newBadges = await checkBadgesAfterSubmission(userId);
+        
+        if (newBadges.length > 0) {
+          logger.info('User earned new badges', {
+            userId,
+            submissionId: submission.id,
+            badgeCount: newBadges.length,
+            badges: newBadges.map(b => b.badge.name)
+          });
+        }
+      } catch (badgeError) {
+        logger.error('Failed to check badges after submission', {
+          error: badgeError.message,
+          userId,
+          submissionId: submission.id
+        });
+      }
     }
 
     await updateProblemStats(problem.id, allPassed);
@@ -159,10 +179,14 @@ export const submitSolution = async (problemSlug, sourceCode, language, userId) 
       submissionId: submission.id,
       status: finalStatus,
       passedTests: passedCount,
-      totalTests: results.length
+      totalTests: results.length,
+      newBadgesEarned: newBadges.length
     });
 
-    return updatedSubmission;
+    return {
+      submission: updatedSubmission,
+      newBadgesEarned: newBadges
+    };
 
   } catch (error) {
     await prisma.submission.update({
@@ -193,6 +217,8 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
       }
     });
 
+    let isFirstSolve = false;
+
     if (!existingSolve) {
       await prisma.problemSolved.create({
         data: {
@@ -202,6 +228,7 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
           totalAttempts: 1
         }
       });
+      isFirstSolve = true;
     } else {
       await prisma.problemSolved.update({
         where: {
@@ -216,7 +243,6 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
       });
     }
 
-    // Update problem attempt
     await prisma.problemAttempt.upsert({
       where: {
         userId_problemId: {
@@ -238,8 +264,9 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
       }
     });
 
-    // Update user stats
     await updateUserStatsAfterSubmission(userId, problemId, true);
+
+    return isFirstSolve;
 
   } catch (error) {
     logger.error('Failed to handle accepted submission', { 
@@ -247,6 +274,7 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
       userId,
       problemId 
     });
+    return false;
   }
 }
 
@@ -314,7 +342,7 @@ export const getSubmissionById = async (submissionId, userId) => {
           avatar: true
         }
       },
-      testcaseResults: {
+      testcases: {
         orderBy: { testcase: 'asc' }
       }
     }

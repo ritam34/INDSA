@@ -4,60 +4,116 @@ import logger from '../utils/logger.js';
 
 export const updateUserStatsAfterSubmission = async (userId, problemId, isAccepted) => {
   try {
-    const userStats = await prisma.userStats.findUnique({
+    const problem = await prisma.problem.findUnique({
+      where: { id: problemId },
+      select: { difficulty: true }
+    });
+
+    if (!problem) {
+      logger.error('Problem not found when updating stats', { problemId });
+      return;
+    }
+
+    let userStats = await prisma.userStats.findUnique({
       where: { userId }
     });
 
     if (!userStats) {
-      logger.error('User stats not found', { userId });
-      return;
-    }
-    await prisma.userStats.update({
-      where: { userId },
-      data: {
-        totalSubmissions: { increment: 1 },
-        ...(isAccepted && { acceptedSubmissions: { increment: 1 } })
-      }
-    });
-    if (isAccepted) {
-      const existingSolve = await prisma.problemSolved.findUnique({
-        where: {
-          userId_problemId: {
-            userId,
-            problemId
-          }
+      userStats = await prisma.userStats.create({
+        data: {
+          userId,
+          totalSubmissions: 0,
+          acceptedSubmissions: 0,
+          easyProblemsSolved: 0,
+          mediumProblemsSolved: 0,
+          hardProblemsSolved: 0,
+          totalSolved: 0,
+          streak: 0,
+          longestStreak: 0
         }
       });
+    }
+
+    const existingSolve = await prisma.problemSolved.findUnique({
+      where: {
+        userId_problemId: {
+          userId,
+          problemId
+        }
+      }
+    });
+
+    const updateData = {
+      totalSubmissions: { increment: 1 }
+    };
+
+    if (isAccepted) {
+      updateData.acceptedSubmissions = { increment: 1 };
 
       if (!existingSolve) {
-        const problem = await prisma.problem.findUnique({
-          where: { id: problemId },
-          select: { difficulty: true }
-        });
         const difficultyField = `${problem.difficulty.toLowerCase()}ProblemsSolved`;
-        
-        await prisma.userStats.update({
-          where: { userId },
-          data: {
-            [difficultyField]: { increment: 1 }
-          }
-        });
 
-        await updateStreak(userId);
+        updateData[difficultyField] = { increment: 1 };
+        updateData.totalSolved = { increment: 1 };
 
-        updateGlobalRanking().catch(err => {
-          logger.error('Failed to update global ranking', { error: err.message });
+        await prisma.problemSolved.create({
+          data: { userId, problemId }
         });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const lastSolvedDate = userStats.lastSolvedDate
+        ? new Date(userStats.lastSolvedDate)
+        : null;
+
+      if (lastSolvedDate) {
+        lastSolvedDate.setHours(0, 0, 0, 0);
+        const daysDiff =
+          Math.floor((today - lastSolvedDate) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff === 0) {
+          updateData.lastSolvedDate = new Date();
+        } else if (daysDiff === 1) {
+          const newStreak = userStats.streak + 1;
+          updateData.streak = newStreak;
+          updateData.longestStreak = Math.max(newStreak, userStats.longestStreak);
+          updateData.lastSolvedDate = new Date();
+        } else {
+          updateData.streak = 1;
+          updateData.lastSolvedDate = new Date();
+        }
+      } else {
+        updateData.streak = 1;
+        updateData.longestStreak = 1;
+        updateData.lastSolvedDate = new Date();
       }
     }
 
-    logger.info('User stats updated', { userId, problemId, isAccepted });
-  } catch (error) {
-    logger.error('Failed to update user stats', { 
-      error: error.message, 
-      userId, 
-      problemId 
+    const updatedStats = await prisma.userStats.update({
+      where: { userId },
+      data: updateData
     });
+
+    logger.info('User stats updated', {
+      userId,
+      problemId,
+      difficulty: problem.difficulty,
+      isAccepted,
+      totalSolved: updatedStats.totalSolved,
+      streak: updatedStats.streak
+    });
+
+    return updatedStats;
+
+  } catch (error) {
+    logger.error('Failed to update user stats', {
+      error: error.message,
+      userId,
+      problemId
+    });
+    throw error;
   }
 };
 

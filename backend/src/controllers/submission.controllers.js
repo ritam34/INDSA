@@ -31,21 +31,47 @@ export const runCode = asyncHandler(async (req, res) => {
 export const submitSolution = asyncHandler(async (req, res) => {
   const { problemSlug, sourceCode, language } = req.body;
   
-  const submission = await submissionService.submitSolution(
+  const result = await submissionService.submitSolution(
     problemSlug,
     sourceCode,
     language,
     req.user.id
   );
   
+  let message = 'Submission processed';
+  
+  if (result.submission.status === 'ACCEPTED') {
+    message = 'Accepted';
+    
+    if (result.newBadgesEarned && result.newBadgesEarned.length > 0) {
+      const badgeNames = result.newBadgesEarned
+        .map(b => b.badge.name)
+        .join(', ');
+      message += ` | You earned ${result.newBadgesEarned.length} new badge(s): ${badgeNames}`;
+    }
+  } else {
+    message = result.submission.status
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+  
+  const responseData = {
+    id: result.submission.id,
+    status: result.submission.status,
+    language: result.submission.language,
+    passedTests: result.submission.passedTests,
+    totalTests: result.submission.totalTests,
+    time: result.submission.time,
+    memory: result.submission.memory,
+    createdAt: result.submission.createdAt,
+    problem: result.submission.problem,
+    testcases: result.submission.testcases,
+    newBadgesEarned: result.newBadgesEarned || []
+  };
+
   return res.status(201).json(
-    new ApiResponse(
-      201, 
-      submission, 
-      submission.status === 'ACCEPTED' 
-        ? 'Accepted' 
-        : 'Submission processed'
-    )
+    new ApiResponse(201, responseData, message)
   );
 });
 
