@@ -1,16 +1,19 @@
-import express from 'express';
-import * as contestController from '../controllers/contest.controllers.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as contestController from "../controllers/contest.controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   createContestSchema,
   updateContestSchema,
   contestSlugSchema,
   contestIdSchema,
-  contestSubmissionSchema
-} from '../validators/contest.validator.js';
-import { rateLimit } from '../middleware/rateLimit.middleware.js';
+  contestSubmissionSchema,
+} from "../validators/contest.validator.js";
+import { rateLimit } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
@@ -19,7 +22,7 @@ const router = express.Router();
  * @desc    Get all contests with filters
  * @access  Public
  */
-router.get('/', contestController.getAllContests);
+router.get("/", contestController.getAllContests);
 
 /**
  * @route   GET /api/contests/:slug
@@ -27,9 +30,9 @@ router.get('/', contestController.getAllContests);
  * @access  Public
  */
 router.get(
-  '/:slug',
+  "/:slug",
   validateParams(contestSlugSchema),
-  contestController.getContestBySlug
+  contestController.getContestBySlug,
 );
 
 /**
@@ -38,9 +41,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:slug/leaderboard',
+  "/:slug/leaderboard",
   validateParams(contestSlugSchema),
-  contestController.getContestLeaderboard
+  contestController.getContestLeaderboard,
 );
 
 /**
@@ -49,9 +52,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:slug/standings',
+  "/:slug/standings",
   validateParams(contestSlugSchema),
-  contestController.getContestStandings
+  contestController.getContestStandings,
 );
 
 /**
@@ -60,9 +63,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:slug/stats',
+  "/:slug/stats",
   validateParams(contestSlugSchema),
-  contestController.getContestStats
+  contestController.getContestStats,
 );
 
 /**
@@ -70,7 +73,7 @@ router.get(
  * @desc    Get user's contest history
  * @access  Public
  */
-router.get('/user/:username/history', contestController.getUserContestHistory);
+router.get("/user/:username/history", contestController.getUserContestHistory);
 
 /**
  * @route   POST /api/contests/:slug/register
@@ -78,10 +81,10 @@ router.get('/user/:username/history', contestController.getUserContestHistory);
  * @access  Private
  */
 router.post(
-  '/:slug/register',
+  "/:slug/register",
   authenticate,
   validateParams(contestSlugSchema),
-  contestController.registerForContest
+  contestController.registerForContest,
 );
 
 /**
@@ -90,10 +93,10 @@ router.post(
  * @access  Private
  */
 router.delete(
-  '/:slug/register',
+  "/:slug/register",
   authenticate,
   validateParams(contestSlugSchema),
-  contestController.unregisterFromContest
+  contestController.unregisterFromContest,
 );
 
 /**
@@ -102,10 +105,10 @@ router.delete(
  * @access  Private
  */
 router.get(
-  '/:slug/problems',
+  "/:slug/problems",
   authenticate,
   validateParams(contestSlugSchema),
-  contestController.getContestProblems
+  contestController.getContestProblems,
 );
 
 /**
@@ -114,12 +117,12 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/:slug/submit',
+  "/:slug/submit",
   authenticate,
   validateParams(contestSlugSchema),
   validate(contestSubmissionSchema),
-  rateLimit({ maxRequests: 50, windowMs: 60 * 60 * 1000 }), 
-  contestController.submitContestSolution
+  rateLimit({ maxRequests: 50, windowMs: 60 * 60 * 1000 }),
+  contestController.submitContestSolution,
 );
 
 /**
@@ -128,10 +131,10 @@ router.post(
  * @access  Private
  */
 router.get(
-  '/:slug/my-submissions',
+  "/:slug/my-submissions",
   authenticate,
   validateParams(contestSlugSchema),
-  contestController.getMyContestSubmissions
+  contestController.getMyContestSubmissions,
 );
 
 /**
@@ -140,11 +143,11 @@ router.get(
  * @access  Private (Admin only)
  */
 router.post(
-  '/',
+  "/",
   authenticate,
   isAdmin,
   validate(createContestSchema),
-  contestController.createContest
+  contestController.createContest,
 );
 
 /**
@@ -153,12 +156,12 @@ router.post(
  * @access  Private (Admin only)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(contestIdSchema),
   validate(updateContestSchema),
-  contestController.updateContest
+  contestController.updateContest,
 );
 
 /**
@@ -167,11 +170,11 @@ router.patch(
  * @access  Private (Admin only)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(contestIdSchema),
-  contestController.deleteContest
+  contestController.deleteContest,
 );
 
 /**
@@ -180,11 +183,11 @@ router.delete(
  * @access  Private (Admin only)
  */
 router.post(
-  '/:slug/finalize',
+  "/:slug/finalize",
   authenticate,
   isAdmin,
   validateParams(contestSlugSchema),
-  contestController.finalizeContest
+  contestController.finalizeContest,
 );
 
 export default router;

@@ -1,9 +1,13 @@
-import express from 'express';
-import * as discussionController from '../controllers/discussion.controllers.js';
-import * as commentController from '../controllers/comment.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { isModerator } from '../middleware/role.middleware.js';
-import { validate, validateParams, validateQuery } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as discussionController from "../controllers/discussion.controllers.js";
+import * as commentController from "../controllers/comment.controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { isModerator } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateParams,
+  validateQuery,
+} from "../middleware/validation.middleware.js";
 import {
   createDiscussionSchema,
   updateDiscussionSchema,
@@ -12,9 +16,9 @@ import {
   updateCommentSchema,
   voteSchema,
   discussionIdSchema,
-  commentIdSchema
-} from '../validators/discussion.validator.js';
-import { rateLimit } from '../middleware/rateLimit.middleware.js';
+  commentIdSchema,
+} from "../validators/discussion.validator.js";
+import { rateLimit } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
@@ -26,9 +30,9 @@ const router = express.Router();
  * @access  Public
  */
 router.get(
-  '/user/:username',
+  "/user/:username",
   validateQuery(discussionQuerySchema),
-  discussionController.getUserDiscussions
+  discussionController.getUserDiscussions,
 );
 
 /**
@@ -37,9 +41,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/problems/:slug',
+  "/problems/:slug",
   validateQuery(discussionQuerySchema),
-  discussionController.getProblemDiscussions
+  discussionController.getProblemDiscussions,
 );
 
 /**
@@ -48,11 +52,11 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/problems/:slug',
+  "/problems/:slug",
   authenticate,
-  rateLimit({ windowMs: 300000, maxRequests: 5, action: 'discussion' }), // 5 per 5 minutes
+  rateLimit({ windowMs: 300000, maxRequests: 5, action: "discussion" }), // 5 per 5 minutes
   validate(createDiscussionSchema),
-  discussionController.createDiscussion
+  discussionController.createDiscussion,
 );
 
 /**
@@ -61,9 +65,9 @@ router.post(
  * @access  Public
  */
 router.get(
-  '/:id',
+  "/:id",
   validateParams(discussionIdSchema),
-  discussionController.getDiscussionById
+  discussionController.getDiscussionById,
 );
 
 /**
@@ -72,11 +76,11 @@ router.get(
  * @access  Private (Owner only)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(discussionIdSchema),
   validate(updateDiscussionSchema),
-  discussionController.updateDiscussion
+  discussionController.updateDiscussion,
 );
 
 /**
@@ -85,10 +89,10 @@ router.patch(
  * @access  Private (Owner/Admin)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(discussionIdSchema),
-  discussionController.deleteDiscussion
+  discussionController.deleteDiscussion,
 );
 
 /**
@@ -97,11 +101,11 @@ router.delete(
  * @access  Private
  */
 router.post(
-  '/:id/vote',
+  "/:id/vote",
   authenticate,
   validateParams(discussionIdSchema),
   validate(voteSchema),
-  discussionController.voteDiscussion
+  discussionController.voteDiscussion,
 );
 
 /**
@@ -110,11 +114,11 @@ router.post(
  * @access  Private (Admin/Moderator)
  */
 router.post(
-  '/:id/pin',
+  "/:id/pin",
   authenticate,
   isModerator,
   validateParams(discussionIdSchema),
-  discussionController.togglePinDiscussion
+  discussionController.togglePinDiscussion,
 );
 
 /**
@@ -123,11 +127,11 @@ router.post(
  * @access  Private (Admin/Moderator)
  */
 router.post(
-  '/:id/lock',
+  "/:id/lock",
   authenticate,
   isModerator,
   validateParams(discussionIdSchema),
-  discussionController.toggleLockDiscussion
+  discussionController.toggleLockDiscussion,
 );
 
 // COMMENT ROUTES
@@ -138,12 +142,12 @@ router.post(
  * @access  Private
  */
 router.post(
-  '/:id/comments',
+  "/:id/comments",
   authenticate,
-  rateLimit({ windowMs: 60000, maxRequests: 10, action: 'comment' }), // 10 per minute
+  rateLimit({ windowMs: 60000, maxRequests: 10, action: "comment" }), // 10 per minute
   validateParams(discussionIdSchema),
   validate(createCommentSchema),
-  commentController.createComment
+  commentController.createComment,
 );
 
 /**
@@ -152,11 +156,11 @@ router.post(
  * @access  Private (Owner only)
  */
 router.patch(
-  '/comments/:id',
+  "/comments/:id",
   authenticate,
   validateParams(commentIdSchema),
   validate(updateCommentSchema),
-  commentController.updateComment
+  commentController.updateComment,
 );
 
 /**
@@ -165,10 +169,10 @@ router.patch(
  * @access  Private (Owner/Admin)
  */
 router.delete(
-  '/comments/:id',
+  "/comments/:id",
   authenticate,
   validateParams(commentIdSchema),
-  commentController.deleteComment
+  commentController.deleteComment,
 );
 
 /**
@@ -177,11 +181,11 @@ router.delete(
  * @access  Private
  */
 router.post(
-  '/comments/:id/vote',
+  "/comments/:id/vote",
   authenticate,
   validateParams(commentIdSchema),
   validate(voteSchema),
-  commentController.voteComment
+  commentController.voteComment,
 );
 
 /**
@@ -190,9 +194,9 @@ router.post(
  * @access  Public
  */
 router.get(
-  '/comments/:id/replies',
+  "/comments/:id/replies",
   validateParams(commentIdSchema),
-  commentController.getCommentReplies
+  commentController.getCommentReplies,
 );
 
 export default router;

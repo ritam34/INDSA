@@ -1,7 +1,11 @@
-import express from 'express';
-import * as playlistController from '../controllers/playlist.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { validate, validateParams, validateQuery } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as playlistController from "../controllers/playlist.controllers.js";
+import { authenticate, optionalAuth } from "../middleware/auth.middleware.js";
+import {
+  validate,
+  validateParams,
+  validateQuery,
+} from "../middleware/validation.middleware.js";
 import {
   createPlaylistSchema,
   updatePlaylistSchema,
@@ -9,8 +13,8 @@ import {
   reorderProblemsSchema,
   playlistQuerySchema,
   playlistIdSchema,
-  playlistSlugSchema
-} from '../validators/playlist.validator.js';
+  playlistSlugSchema,
+} from "../validators/playlist.validator.js";
 
 const router = express.Router();
 
@@ -20,9 +24,9 @@ const router = express.Router();
  * @access  Public
  */
 router.get(
-  '/discover',
+  "/discover",
   validateQuery(playlistQuerySchema),
-  playlistController.getPublicPlaylists
+  playlistController.getPublicPlaylists,
 );
 
 /**
@@ -31,10 +35,10 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/user/:username',
+  "/user/:username",
   optionalAuth,
   validateQuery(playlistQuerySchema),
-  playlistController.getUserPlaylists
+  playlistController.getUserPlaylists,
 );
 
 /**
@@ -43,9 +47,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/user/:username/:slug',
+  "/user/:username/:slug",
   optionalAuth,
-  playlistController.getPlaylistBySlug
+  playlistController.getPlaylistBySlug,
 );
 
 /**
@@ -54,10 +58,10 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/',
+  "/",
   authenticate,
   validate(createPlaylistSchema),
-  playlistController.createPlaylist
+  playlistController.createPlaylist,
 );
 
 /**
@@ -66,10 +70,10 @@ router.post(
  * @access  Public
  */
 router.get(
-  '/:id',
+  "/:id",
   optionalAuth,
   validateParams(playlistIdSchema),
-  playlistController.getPlaylistById
+  playlistController.getPlaylistById,
 );
 
 /**
@@ -78,11 +82,11 @@ router.get(
  * @access  Private (Owner only)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(playlistIdSchema),
   validate(updatePlaylistSchema),
-  playlistController.updatePlaylist
+  playlistController.updatePlaylist,
 );
 
 /**
@@ -91,10 +95,10 @@ router.patch(
  * @access  Private (Owner only)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(playlistIdSchema),
-  playlistController.deletePlaylist
+  playlistController.deletePlaylist,
 );
 
 /**
@@ -103,11 +107,11 @@ router.delete(
  * @access  Private (Owner only)
  */
 router.post(
-  '/:id/problems',
+  "/:id/problems",
   authenticate,
   validateParams(playlistIdSchema),
   validate(addProblemSchema),
-  playlistController.addProblemToPlaylist
+  playlistController.addProblemToPlaylist,
 );
 
 /**
@@ -116,10 +120,10 @@ router.post(
  * @access  Private (Owner only)
  */
 router.delete(
-  '/:id/problems/:problemId',
+  "/:id/problems/:problemId",
   authenticate,
   validateParams(playlistIdSchema),
-  playlistController.removeProblemFromPlaylist
+  playlistController.removeProblemFromPlaylist,
 );
 
 /**
@@ -128,11 +132,11 @@ router.delete(
  * @access  Private (Owner only)
  */
 router.patch(
-  '/:id/reorder',
+  "/:id/reorder",
   authenticate,
   validateParams(playlistIdSchema),
   validate(reorderProblemsSchema),
-  playlistController.reorderProblems
+  playlistController.reorderProblems,
 );
 
 export default router;

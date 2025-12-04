@@ -1,13 +1,17 @@
-import express from 'express';
-import * as submissionController from '../controllers/submission.controllers.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { validate, validateQuery, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as submissionController from "../controllers/submission.controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import {
+  validate,
+  validateQuery,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   runCodeSchema,
   submitSolutionSchema,
-  submissionQuerySchema
-} from '../validators/submission.validator.js';
-import { rateLimit } from '../middleware/rateLimit.middleware.js';
+  submissionQuerySchema,
+} from "../validators/submission.validator.js";
+import { rateLimit } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
@@ -16,7 +20,7 @@ const router = express.Router();
  * @desc    Get supported languages
  * @access  Public
  */
-router.get('/languages', submissionController.getSupportedLanguages);
+router.get("/languages", submissionController.getSupportedLanguages);
 
 /**
  * @route   POST /api/submissions/run
@@ -24,11 +28,11 @@ router.get('/languages', submissionController.getSupportedLanguages);
  * @access  Private
  */
 router.post(
-  '/run',
+  "/run",
   authenticate,
   rateLimit({ windowMs: 60000, maxRequests: 10 }), // 10 requests per minute
   validate(runCodeSchema),
-  submissionController.runCode
+  submissionController.runCode,
 );
 
 /**
@@ -37,11 +41,11 @@ router.post(
  * @access  Private
  */
 router.post(
-  '/submit',
+  "/submit",
   authenticate,
   rateLimit({ windowMs: 60000, maxRequests: 5 }), // 5 submissions per minute
   validate(submitSolutionSchema),
-  submissionController.submitSolution
+  submissionController.submitSolution,
 );
 
 /**
@@ -50,10 +54,10 @@ router.post(
  * @access  Private
  */
 router.get(
-  '/user/me',
+  "/user/me",
   authenticate,
   validateQuery(submissionQuerySchema),
-  submissionController.getMySubmissions
+  submissionController.getMySubmissions,
 );
 
 /**
@@ -62,10 +66,10 @@ router.get(
  * @access  Private
  */
 router.get(
-  '/problem/:slug',
+  "/problem/:slug",
   authenticate,
   validateQuery(submissionQuerySchema),
-  submissionController.getProblemSubmissions
+  submissionController.getProblemSubmissions,
 );
 
 /**
@@ -73,10 +77,6 @@ router.get(
  * @desc    Get submission by ID
  * @access  Private
  */
-router.get(
-  '/:id',
-  authenticate,
-  submissionController.getSubmissionById
-);
+router.get("/:id", authenticate, submissionController.getSubmissionById);
 
 export default router;

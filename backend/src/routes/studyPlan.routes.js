@@ -1,8 +1,11 @@
-import express from 'express';
-import * as studyPlanController from '../controllers/studyPlan.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as studyPlanController from "../controllers/studyPlan.controllers.js";
+import { authenticate, optionalAuth } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   createStudyPlanSchema,
   updateStudyPlanSchema,
@@ -10,8 +13,8 @@ import {
   studyPlanIdSchema,
   problemIdSchema,
   enrollStudyPlanSchema,
-  completeProblemSchema
-} from '../validators/studyPlan.validator.js';
+  completeProblemSchema,
+} from "../validators/studyPlan.validator.js";
 
 const router = express.Router();
 
@@ -20,7 +23,7 @@ const router = express.Router();
  * @desc    Get all study plans with filters
  * @access  Public
  */
-router.get('/', studyPlanController.getAllStudyPlans);
+router.get("/", studyPlanController.getAllStudyPlans);
 
 /**
  * @route   GET /api/study-plans/:slug
@@ -28,10 +31,10 @@ router.get('/', studyPlanController.getAllStudyPlans);
  * @access  Public (optionally authenticated)
  */
 router.get(
-  '/:slug',
+  "/:slug",
   optionalAuth,
   validateParams(studyPlanSlugSchema),
-  studyPlanController.getStudyPlanBySlug
+  studyPlanController.getStudyPlanBySlug,
 );
 
 /**
@@ -39,11 +42,7 @@ router.get(
  * @desc    Get user's enrolled study plans
  * @access  Private
  */
-router.get(
-  '/my-plans',
-  authenticate,
-  studyPlanController.getUserStudyPlans
-);
+router.get("/my-plans", authenticate, studyPlanController.getUserStudyPlans);
 
 /**
  * @route   POST /api/study-plans/:slug/enroll
@@ -51,11 +50,11 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/:slug/enroll',
+  "/:slug/enroll",
   authenticate,
   validateParams(studyPlanSlugSchema),
   validate(enrollStudyPlanSchema),
-  studyPlanController.enrollInStudyPlan
+  studyPlanController.enrollInStudyPlan,
 );
 
 /**
@@ -64,10 +63,10 @@ router.post(
  * @access  Private
  */
 router.delete(
-  '/:slug/enroll',
+  "/:slug/enroll",
   authenticate,
   validateParams(studyPlanSlugSchema),
-  studyPlanController.unenrollFromStudyPlan
+  studyPlanController.unenrollFromStudyPlan,
 );
 
 /**
@@ -76,10 +75,10 @@ router.delete(
  * @access  Private
  */
 router.get(
-  '/:slug/progress',
+  "/:slug/progress",
   authenticate,
   validateParams(studyPlanSlugSchema),
-  studyPlanController.getStudyPlanProgress
+  studyPlanController.getStudyPlanProgress,
 );
 
 /**
@@ -88,12 +87,12 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/:slug/complete/:problemId',
+  "/:slug/complete/:problemId",
   authenticate,
   validateParams(studyPlanSlugSchema),
   validateParams(problemIdSchema),
   validate(completeProblemSchema),
-  studyPlanController.completeProblem
+  studyPlanController.completeProblem,
 );
 
 /**
@@ -102,11 +101,11 @@ router.post(
  * @access  Private (Admin only)
  */
 router.post(
-  '/',
+  "/",
   authenticate,
   isAdmin,
   validate(createStudyPlanSchema),
-  studyPlanController.createStudyPlan
+  studyPlanController.createStudyPlan,
 );
 
 /**
@@ -115,12 +114,12 @@ router.post(
  * @access  Private (Admin only)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(studyPlanIdSchema),
   validate(updateStudyPlanSchema),
-  studyPlanController.updateStudyPlan
+  studyPlanController.updateStudyPlan,
 );
 
 /**
@@ -129,11 +128,11 @@ router.patch(
  * @access  Private (Admin only)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(studyPlanIdSchema),
-  studyPlanController.deleteStudyPlan
+  studyPlanController.deleteStudyPlan,
 );
 
 export default router;

@@ -1,13 +1,17 @@
-import express from 'express';
-import * as userController from '../controllers/user.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { validate, validateQuery, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as userController from "../controllers/user.controllers.js";
+import { authenticate, optionalAuth } from "../middleware/auth.middleware.js";
+import {
+  validate,
+  validateQuery,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   updateProfileSchema,
   changePasswordSchema,
   usernameParamSchema,
-  userQuerySchema
-} from '../validators/user.validator.js';
+  userQuerySchema,
+} from "../validators/user.validator.js";
 
 const router = express.Router();
 
@@ -16,18 +20,14 @@ const router = express.Router();
  * @desc    Get all users (leaderboard)
  * @access  Public
  */
-router.get(
-  '/',
-  validateQuery(userQuerySchema),
-  userController.getAllUsers
-);
+router.get("/", validateQuery(userQuerySchema), userController.getAllUsers);
 
 /**
  * @route   GET /api/users/me
  * @desc    Get current user profile
  * @access  Private
  */
-router.get('/me', authenticate, userController.getCurrentUser);
+router.get("/me", authenticate, userController.getCurrentUser);
 
 /**
  * @route   PATCH /api/users/me
@@ -35,10 +35,10 @@ router.get('/me', authenticate, userController.getCurrentUser);
  * @access  Private
  */
 router.patch(
-  '/me',
+  "/me",
   authenticate,
   validate(updateProfileSchema),
-  userController.updateProfile
+  userController.updateProfile,
 );
 
 /**
@@ -46,7 +46,7 @@ router.patch(
  * @desc    Delete user account
  * @access  Private
  */
-router.delete('/me', authenticate, userController.deleteAccount);
+router.delete("/me", authenticate, userController.deleteAccount);
 
 /**
  * @route   PATCH /api/users/password
@@ -54,10 +54,10 @@ router.delete('/me', authenticate, userController.deleteAccount);
  * @access  Private
  */
 router.patch(
-  '/password',
+  "/password",
   authenticate,
   validate(changePasswordSchema),
-  userController.changePassword
+  userController.changePassword,
 );
 
 /**
@@ -66,10 +66,10 @@ router.patch(
  * @access  Public (with optional auth)
  */
 router.get(
-  '/:username',
+  "/:username",
   optionalAuth,
   validateParams(usernameParamSchema),
-  userController.getUserProfile
+  userController.getUserProfile,
 );
 
 /**
@@ -78,9 +78,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:username/stats',
+  "/:username/stats",
   validateParams(usernameParamSchema),
-  userController.getUserStats
+  userController.getUserStats,
 );
 
 /**
@@ -89,9 +89,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:username/submissions',
+  "/:username/submissions",
   validateParams(usernameParamSchema),
-  userController.getUserSubmissions
+  userController.getUserSubmissions,
 );
 
 /**
@@ -100,9 +100,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:username/solved',
+  "/:username/solved",
   validateParams(usernameParamSchema),
-  userController.getUserSolvedProblems
+  userController.getUserSolvedProblems,
 );
 
 /**
@@ -111,9 +111,9 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/:username/badges',
+  "/:username/badges",
   validateParams(usernameParamSchema),
-  userController.getUserBadges
+  userController.getUserBadges,
 );
 
 export default router;

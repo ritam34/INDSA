@@ -1,7 +1,7 @@
-import express from 'express';
-import * as statsController from '../controllers/stats.controllers.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
+import express from "express";
+import * as statsController from "../controllers/stats.controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
  * @desc    Get global leaderboard
  * @access  Public
  */
-router.get('/leaderboard', statsController.getLeaderboard);
+router.get("/leaderboard", statsController.getLeaderboard);
 
 /**
  * @route   POST /api/stats/update-rankings
@@ -18,10 +18,10 @@ router.get('/leaderboard', statsController.getLeaderboard);
  * @access  Private (Admin)
  */
 router.post(
-  '/update-rankings',
+  "/update-rankings",
   authenticate,
   isAdmin,
-  statsController.updateRankings
+  statsController.updateRankings,
 );
 
 export default router;

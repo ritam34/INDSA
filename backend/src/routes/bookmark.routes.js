@@ -1,13 +1,17 @@
-import express from 'express';
-import * as bookmarkController from '../controllers/bookmark.controllers.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { validate, validateParams, validateQuery } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as bookmarkController from "../controllers/bookmark.controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import {
+  validate,
+  validateParams,
+  validateQuery,
+} from "../middleware/validation.middleware.js";
 import {
   createBookmarkSchema,
   updateBookmarkSchema,
   bookmarkQuerySchema,
-  bookmarkIdSchema
-} from '../validators/bookmark.validator.js';
+  bookmarkIdSchema,
+} from "../validators/bookmark.validator.js";
 
 const router = express.Router();
 
@@ -18,28 +22,28 @@ router.use(authenticate);
  * @desc    Get bookmark statistics
  * @access  Private
  */
-router.get('/stats', bookmarkController.getBookmarkStats);
+router.get("/stats", bookmarkController.getBookmarkStats);
 
 /**
  * @route   GET /api/bookmarks/tags
  * @desc    Get user's bookmark tags
  * @access  Private
  */
-router.get('/tags', bookmarkController.getUserBookmarkTags);
+router.get("/tags", bookmarkController.getUserBookmarkTags);
 
 /**
  * @route   GET /api/bookmarks/check/:problemId
  * @desc    Check if problem is bookmarked
  * @access  Private
  */
-router.get('/check/:problemId', bookmarkController.checkBookmark);
+router.get("/check/:problemId", bookmarkController.checkBookmark);
 
 /**
  * @route   POST /api/bookmarks/toggle/:problemId
  * @desc    Toggle bookmark (add/remove)
  * @access  Private
  */
-router.post('/toggle/:problemId', bookmarkController.toggleBookmark);
+router.post("/toggle/:problemId", bookmarkController.toggleBookmark);
 
 /**
  * @route   GET /api/bookmarks
@@ -47,9 +51,9 @@ router.post('/toggle/:problemId', bookmarkController.toggleBookmark);
  * @access  Private
  */
 router.get(
-  '/',
+  "/",
   validateQuery(bookmarkQuerySchema),
-  bookmarkController.getUserBookmarks
+  bookmarkController.getUserBookmarks,
 );
 
 /**
@@ -58,9 +62,9 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/',
+  "/",
   validate(createBookmarkSchema),
-  bookmarkController.createBookmark
+  bookmarkController.createBookmark,
 );
 
 /**
@@ -69,9 +73,9 @@ router.post(
  * @access  Private
  */
 router.get(
-  '/:id',
+  "/:id",
   validateParams(bookmarkIdSchema),
-  bookmarkController.getBookmarkById
+  bookmarkController.getBookmarkById,
 );
 
 /**
@@ -80,10 +84,10 @@ router.get(
  * @access  Private
  */
 router.patch(
-  '/:id',
+  "/:id",
   validateParams(bookmarkIdSchema),
   validate(updateBookmarkSchema),
-  bookmarkController.updateBookmark
+  bookmarkController.updateBookmark,
 );
 
 /**
@@ -92,9 +96,9 @@ router.patch(
  * @access  Private
  */
 router.delete(
-  '/:id',
+  "/:id",
   validateParams(bookmarkIdSchema),
-  bookmarkController.deleteBookmark
+  bookmarkController.deleteBookmark,
 );
 
 export default router;

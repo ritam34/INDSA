@@ -1,8 +1,12 @@
-import express from 'express';
-import * as problemController from '../controllers/problem.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate, validateQuery, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as problemController from "../controllers/problem.controllers.js";
+import { authenticate, optionalAuth } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateQuery,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   createProblemSchema,
   updateProblemSchema,
@@ -10,8 +14,8 @@ import {
   problemSlugSchema,
   problemIdSchema,
   addTestCaseSchema,
-  addCodeSnippetSchema
-} from '../validators/problem.validator.js';
+  addCodeSnippetSchema,
+} from "../validators/problem.validator.js";
 
 const router = express.Router();
 
@@ -20,21 +24,21 @@ const router = express.Router();
  * @desc    Get problem statistics
  * @access  Public
  */
-router.get('/stats/overview', problemController.getProblemStats);
+router.get("/stats/overview", problemController.getProblemStats);
 
 /**
  * @route   GET /api/problems/random
  * @desc    Get random problem
  * @access  Public
  */
-router.get('/random', problemController.getRandomProblem);
+router.get("/random", problemController.getRandomProblem);
 
 /**
  * @route   GET /api/problems/search/:query
  * @desc    Search problems
  * @access  Public
  */
-router.get('/search/:query', optionalAuth, problemController.searchProblems);
+router.get("/search/:query", optionalAuth, problemController.searchProblems);
 
 /**
  * @route   GET /api/problems
@@ -42,10 +46,10 @@ router.get('/search/:query', optionalAuth, problemController.searchProblems);
  * @access  Public
  */
 router.get(
-  '/',
+  "/",
   optionalAuth,
   validateQuery(problemQuerySchema),
-  problemController.getAllProblems
+  problemController.getAllProblems,
 );
 
 /**
@@ -54,11 +58,11 @@ router.get(
  * @access  Private (Admin)
  */
 router.post(
-  '/',
+  "/",
   authenticate,
   isAdmin,
   validate(createProblemSchema),
-  problemController.createProblem
+  problemController.createProblem,
 );
 
 /**
@@ -67,10 +71,10 @@ router.post(
  * @access  Public
  */
 router.get(
-  '/:slug',
+  "/:slug",
   optionalAuth,
   validateParams(problemSlugSchema),
-  problemController.getProblemBySlug
+  problemController.getProblemBySlug,
 );
 
 /**
@@ -79,12 +83,12 @@ router.get(
  * @access  Private (Admin/Creator)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(problemIdSchema),
   validate(updateProblemSchema),
-  problemController.updateProblem
+  problemController.updateProblem,
 );
 
 /**
@@ -93,11 +97,11 @@ router.patch(
  * @access  Private (Admin/Creator)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   isAdmin,
   validateParams(problemIdSchema),
-  problemController.deleteProblem
+  problemController.deleteProblem,
 );
 
 /**
@@ -106,12 +110,12 @@ router.delete(
  * @access  Private (Admin/Creator)
  */
 router.post(
-  '/:id/test-cases',
+  "/:id/test-cases",
   authenticate,
   isAdmin,
   validateParams(problemIdSchema),
   validate(addTestCaseSchema),
-  problemController.addTestCase
+  problemController.addTestCase,
 );
 
 /**
@@ -120,12 +124,12 @@ router.post(
  * @access  Private (Admin/Creator)
  */
 router.post(
-  '/:id/code-snippets',
+  "/:id/code-snippets",
   authenticate,
   isAdmin,
   validateParams(problemIdSchema),
   validate(addCodeSnippetSchema),
-  problemController.addCodeSnippet
+  problemController.addCodeSnippet,
 );
 
 export default router;

@@ -1,16 +1,20 @@
-import express from 'express';
-import * as solutionController from '../controllers/solution.controllers.js';
-import { authenticate, optionalAuth } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate, validateParams, validateQuery } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as solutionController from "../controllers/solution.controllers.js";
+import { authenticate, optionalAuth } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateParams,
+  validateQuery,
+} from "../middleware/validation.middleware.js";
 import {
   createSolutionSchema,
   updateSolutionSchema,
   solutionQuerySchema,
   solutionIdSchema,
-  voteSchema
-} from '../validators/solution.validator.js';
-import { rateLimit } from '../middleware/rateLimit.middleware.js';
+  voteSchema,
+} from "../validators/solution.validator.js";
+import { rateLimit } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
@@ -20,9 +24,9 @@ const router = express.Router();
  * @access  Public
  */
 router.get(
-  '/user/:username',
+  "/user/:username",
   validateQuery(solutionQuerySchema),
-  solutionController.getUserSolutions
+  solutionController.getUserSolutions,
 );
 
 /**
@@ -31,10 +35,10 @@ router.get(
  * @access  Public
  */
 router.get(
-  '/problems/:slug',
+  "/problems/:slug",
   optionalAuth,
   validateQuery(solutionQuerySchema),
-  solutionController.getProblemSolutions
+  solutionController.getProblemSolutions,
 );
 
 /**
@@ -43,11 +47,11 @@ router.get(
  * @access  Private
  */
 router.post(
-  '/problems/:slug',
+  "/problems/:slug",
   authenticate,
-  rateLimit({ windowMs: 3600000, maxRequests: 5, action: 'solution' }), // 5 per hour
+  rateLimit({ windowMs: 3600000, maxRequests: 5, action: "solution" }), // 5 per hour
   validate(createSolutionSchema),
-  solutionController.createSolution
+  solutionController.createSolution,
 );
 
 /**
@@ -56,10 +60,10 @@ router.post(
  * @access  Public
  */
 router.get(
-  '/:id',
+  "/:id",
   optionalAuth,
   validateParams(solutionIdSchema),
-  solutionController.getSolutionById
+  solutionController.getSolutionById,
 );
 
 /**
@@ -68,11 +72,11 @@ router.get(
  * @access  Private (Owner only)
  */
 router.patch(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(solutionIdSchema),
   validate(updateSolutionSchema),
-  solutionController.updateSolution
+  solutionController.updateSolution,
 );
 
 /**
@@ -81,10 +85,10 @@ router.patch(
  * @access  Private (Owner/Admin)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   validateParams(solutionIdSchema),
-  solutionController.deleteSolution
+  solutionController.deleteSolution,
 );
 
 /**
@@ -93,11 +97,11 @@ router.delete(
  * @access  Private
  */
 router.post(
-  '/:id/vote',
+  "/:id/vote",
   authenticate,
   validateParams(solutionIdSchema),
   validate(voteSchema),
-  solutionController.voteSolution
+  solutionController.voteSolution,
 );
 
 /**
@@ -106,11 +110,11 @@ router.post(
  * @access  Private (Admin only)
  */
 router.post(
-  '/:id/official',
+  "/:id/official",
   authenticate,
   isAdmin,
   validateParams(solutionIdSchema),
-  solutionController.markAsOfficial
+  solutionController.markAsOfficial,
 );
 
 export default router;

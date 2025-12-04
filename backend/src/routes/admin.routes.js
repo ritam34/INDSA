@@ -1,15 +1,18 @@
-import express from 'express';
-import * as adminController from '../controllers/admin..controllers.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate, validateParams } from '../middleware/validation.middleware.js';
+import express from "express";
+import * as adminController from "../controllers/admin..controllers.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { isAdmin } from "../middleware/role.middleware.js";
+import {
+  validate,
+  validateParams,
+} from "../middleware/validation.middleware.js";
 import {
   updateUserRoleSchema,
   banUserSchema,
   moderateContentSchema,
   userIdSchema,
-  contentIdSchema
-} from '../validators/admin.validator.js';
+  contentIdSchema,
+} from "../validators/admin.validator.js";
 
 const router = express.Router();
 
@@ -20,35 +23,35 @@ router.use(authenticate, isAdmin);
  * @desc    Get dashboard statistics overview
  * @access  Private (Admin only)
  */
-router.get('/dashboard', adminController.getDashboardStats);
+router.get("/dashboard", adminController.getDashboardStats);
 
 /**
  * @route   GET /api/admin/analytics/users
  * @desc    Get user analytics
  * @access  Private (Admin only)
  */
-router.get('/analytics/users', adminController.getUserAnalytics);
+router.get("/analytics/users", adminController.getUserAnalytics);
 
 /**
  * @route   GET /api/admin/analytics/problems
  * @desc    Get problem analytics
  * @access  Private (Admin only)
  */
-router.get('/analytics/problems', adminController.getProblemAnalytics);
+router.get("/analytics/problems", adminController.getProblemAnalytics);
 
 /**
  * @route   GET /api/admin/analytics/submissions
  * @desc    Get submission analytics
  * @access  Private (Admin only)
  */
-router.get('/analytics/submissions', adminController.getSubmissionAnalytics);
+router.get("/analytics/submissions", adminController.getSubmissionAnalytics);
 
 /**
  * @route   GET /api/admin/users
  * @desc    Get all users with filters
  * @access  Private (Admin only)
  */
-router.get('/users', adminController.getAllUsers);
+router.get("/users", adminController.getAllUsers);
 
 /**
  * @route   PATCH /api/admin/users/:userId/role
@@ -56,10 +59,10 @@ router.get('/users', adminController.getAllUsers);
  * @access  Private (Admin only)
  */
 router.patch(
-  '/users/:userId/role',
+  "/users/:userId/role",
   validateParams(userIdSchema),
   validate(updateUserRoleSchema),
-  adminController.updateUserRole
+  adminController.updateUserRole,
 );
 
 /**
@@ -68,10 +71,10 @@ router.patch(
  * @access  Private (Admin only)
  */
 router.post(
-  '/users/:userId/ban',
+  "/users/:userId/ban",
   validateParams(userIdSchema),
   validate(banUserSchema),
-  adminController.banUser
+  adminController.banUser,
 );
 
 /**
@@ -80,9 +83,9 @@ router.post(
  * @access  Private (Admin only)
  */
 router.post(
-  '/users/:userId/unban',
+  "/users/:userId/unban",
   validateParams(userIdSchema),
-  adminController.unbanUser
+  adminController.unbanUser,
 );
 
 /**
@@ -91,9 +94,9 @@ router.post(
  * @access  Private (Admin only)
  */
 router.delete(
-  '/users/:userId',
+  "/users/:userId",
   validateParams(userIdSchema),
-  adminController.deleteUser
+  adminController.deleteUser,
 );
 
 /**
@@ -101,7 +104,7 @@ router.delete(
  * @desc    Get pending content for moderation
  * @access  Private (Admin only)
  */
-router.get('/moderation/pending', adminController.getPendingContent);
+router.get("/moderation/pending", adminController.getPendingContent);
 
 /**
  * @route   POST /api/admin/moderation/:contentType/:contentId
@@ -109,9 +112,9 @@ router.get('/moderation/pending', adminController.getPendingContent);
  * @access  Private (Admin only)
  */
 router.post(
-  '/moderation/:contentType/:contentId',
+  "/moderation/:contentType/:contentId",
   validate(moderateContentSchema),
-  adminController.moderateContent
+  adminController.moderateContent,
 );
 
 /**
@@ -119,6 +122,6 @@ router.post(
  * @desc    Get system logs
  * @access  Private (Admin only)
  */
-router.get('/logs', adminController.getSystemLogs);
+router.get("/logs", adminController.getSystemLogs);
 
 export default router;
