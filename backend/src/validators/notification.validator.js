@@ -1,17 +1,17 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const getNotificationsQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  isRead: Joi.string().valid('true', 'false'),
+  isRead: Joi.string().valid("true", "false"),
   type: Joi.string().valid(
-    'SUBMISSION',
-    'DISCUSSION',
-    'COMMENT',
-    'CONTEST',
-    'ACHIEVEMENT',
-    'SYSTEM'
-  )
+    "SUBMISSION",
+    "DISCUSSION",
+    "COMMENT",
+    "CONTEST",
+    "ACHIEVEMENT",
+    "SYSTEM",
+  ),
 });
 
 export const updateSettingsSchema = Joi.object({
@@ -27,7 +27,9 @@ export const updateSettingsSchema = Joi.object({
   pushOnContest: Joi.boolean(),
   pushOnAchievement: Joi.boolean(),
   weeklyDigest: Joi.boolean(),
-  marketingEmails: Joi.boolean()
-}).min(1).messages({
-  'object.min': 'At least one setting must be provided'
-});
+  marketingEmails: Joi.boolean(),
+})
+  .min(1)
+  .messages({
+    "object.min": "At least one setting must be provided",
+  });
