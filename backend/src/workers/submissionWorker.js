@@ -4,8 +4,8 @@ import {
   submitToJudge0,
   getSubmissionResult,
 } from "../services/judge.service.js";
-import { checkUserBadges } from "../jobs/statsQueue.js";
-import { sendNotification } from "../jobs/statsQueue.js";
+import { checkUserBadges } from "../jobs/badgeQueue.js";
+import { sendNotification } from "../jobs/notificationQueue.js";
 import logger from "../utils/logger.js";
 
 const processSubmission = async (job) => {

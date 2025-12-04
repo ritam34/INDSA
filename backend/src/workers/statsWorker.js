@@ -1,4 +1,6 @@
+import { queues } from "../config/queue/queue.config.js";
 import { prisma } from "../config/database.config.js";
+import logger from "../utils/logger.js";
 
 const processUserStatsUpdate = async (job) => {
   const { userId } = job.data;
@@ -146,6 +148,11 @@ const processAllStreaksUpdate = async (job) => {
 };
 
 export const startStatsWorker = () => {
+  if (!queues.stats) {
+    logger.warn("Stats queue not initialized - stats worker disabled");
+    return;
+  }
+
   queues.stats.process("update-user-stats", 5, processUserStatsUpdate);
   queues.stats.process("update-problem-stats", 5, processProblemStatsUpdate);
   queues.stats.process("update-all-streaks", 1, processAllStreaksUpdate);
@@ -153,4 +160,4 @@ export const startStatsWorker = () => {
   logger.info("Stats worker started");
 };
 
-export { startStatsWorker };
+export default startStatsWorker;

@@ -1,4 +1,6 @@
-import { createNotification } from "../services/notification.service.js";
+import { queues } from "../config/queue/queue.config.js";
+import { prisma } from "../config/database.config.js";
+import logger from "../utils/logger.js";
 
 const processNotification = async (job) => {
   const { userId, type, title, message, data } = job.data;
@@ -6,12 +8,14 @@ const processNotification = async (job) => {
   try {
     logger.info(`Sending notification to user ${userId}`);
 
-    await createNotification({
-      userId,
-      type,
-      title,
-      message,
-      data,
+    await prisma.notification.create({
+      data: {
+        userId,
+        type,
+        title,
+        message,
+        data: data || {},
+      },
     });
 
     logger.info(`Notification sent to ${userId}`);
@@ -24,11 +28,16 @@ const processNotification = async (job) => {
 };
 
 export const startNotificationWorker = () => {
+  if (!queues.notification) {
+    logger.warn(
+      "Notification queue not initialized - notification worker disabled",
+    );
+    return;
+  }
+
   queues.notification.process("send-notification", 10, processNotification);
 
   logger.info("Notification worker started (concurrency: 10)");
 };
 
-export {
-  startNotificationWorker
-};
+export default startNotificationWorker;
