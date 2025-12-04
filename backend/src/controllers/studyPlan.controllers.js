@@ -1,6 +1,6 @@
-import * as studyPlanService from '../services/studyPlan.service.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import * as studyPlanService from "../services/studyPlan.service.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 /**
  * @desc    Get all study plans with filters
@@ -15,15 +15,15 @@ export const getAllStudyPlans = asyncHandler(async (req, res) => {
     category: req.query.category,
     isPremium: req.query.isPremium,
     search: req.query.search,
-    sortBy: req.query.sortBy || 'popularity',
-    order: req.query.order || 'desc'
+    sortBy: req.query.sortBy || "popularity",
+    order: req.query.order || "desc",
   };
 
   const result = await studyPlanService.getAllStudyPlans(filters);
 
-  res.status(200).json(
-    new ApiResponse(200, result, 'Study plans retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Study plans retrieved successfully"));
 });
 
 /**
@@ -37,9 +37,9 @@ export const getStudyPlanBySlug = asyncHandler(async (req, res) => {
 
   const studyPlan = await studyPlanService.getStudyPlanBySlug(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, studyPlan, 'Study plan retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, studyPlan, "Study plan retrieved successfully"));
 });
 
 /**
@@ -51,11 +51,14 @@ export const createStudyPlan = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const studyPlanData = req.body;
 
-  const studyPlan = await studyPlanService.createStudyPlan(studyPlanData, userId);
-
-  res.status(201).json(
-    new ApiResponse(201, studyPlan, 'Study plan created successfully')
+  const studyPlan = await studyPlanService.createStudyPlan(
+    studyPlanData,
+    userId,
   );
+
+  res
+    .status(201)
+    .json(new ApiResponse(201, studyPlan, "Study plan created successfully"));
 });
 
 /**
@@ -68,11 +71,15 @@ export const updateStudyPlan = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const updateData = req.body;
 
-  const studyPlan = await studyPlanService.updateStudyPlan(id, updateData, userId);
-
-  res.status(200).json(
-    new ApiResponse(200, studyPlan, 'Study plan updated successfully')
+  const studyPlan = await studyPlanService.updateStudyPlan(
+    id,
+    updateData,
+    userId,
   );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, studyPlan, "Study plan updated successfully"));
 });
 
 /**
@@ -86,9 +93,9 @@ export const deleteStudyPlan = asyncHandler(async (req, res) => {
 
   await studyPlanService.deleteStudyPlan(id, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Study plan deleted successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Study plan deleted successfully"));
 });
 
 /**
@@ -101,11 +108,17 @@ export const enrollInStudyPlan = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { startDate } = req.body;
 
-  const enrollment = await studyPlanService.enrollInStudyPlan(slug, userId, startDate);
-
-  res.status(201).json(
-    new ApiResponse(201, enrollment, 'Successfully enrolled in study plan')
+  const enrollment = await studyPlanService.enrollInStudyPlan(
+    slug,
+    userId,
+    startDate,
   );
+
+  res
+    .status(201)
+    .json(
+      new ApiResponse(201, enrollment, "Successfully enrolled in study plan"),
+    );
 });
 
 /**
@@ -119,9 +132,11 @@ export const unenrollFromStudyPlan = asyncHandler(async (req, res) => {
 
   await studyPlanService.unenrollFromStudyPlan(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Successfully unenrolled from study plan')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, null, "Successfully unenrolled from study plan"),
+    );
 });
 
 /**
@@ -135,9 +150,9 @@ export const getStudyPlanProgress = asyncHandler(async (req, res) => {
 
   const progress = await studyPlanService.getStudyPlanProgress(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, progress, 'Progress retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, progress, "Progress retrieved successfully"));
 });
 
 /**
@@ -150,11 +165,17 @@ export const completeProblem = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { submissionId, notes } = req.body;
 
-  const result = await studyPlanService.completeProblem(slug, userId, problemId, submissionId, notes);
-
-  res.status(200).json(
-    new ApiResponse(200, result, 'Problem marked as complete')
+  const result = await studyPlanService.completeProblem(
+    slug,
+    userId,
+    problemId,
+    submissionId,
+    notes,
   );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Problem marked as complete"));
 });
 
 /**
@@ -167,7 +188,13 @@ export const getUserStudyPlans = asyncHandler(async (req, res) => {
 
   const studyPlans = await studyPlanService.getUserStudyPlans(userId);
 
-  res.status(200).json(
-    new ApiResponse(200, studyPlans, 'User study plans retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        studyPlans,
+        "User study plans retrieved successfully",
+      ),
+    );
 });

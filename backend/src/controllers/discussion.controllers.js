@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as discussionService from '../services/discussion.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as discussionService from "../services/discussion.service.js";
 
 /**
  * @route   POST /api/discussions/problems/:slug
@@ -9,16 +9,15 @@ import * as discussionService from '../services/discussion.service.js';
  */
 export const createDiscussion = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  
   const discussion = await discussionService.createDiscussion(
     slug,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(201).json(
-    new ApiResponse(201, discussion, 'Discussion created successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, discussion, "Discussion created successfully"));
 });
 
 /**
@@ -28,15 +27,17 @@ export const createDiscussion = asyncHandler(async (req, res) => {
  */
 export const getProblemDiscussions = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  
+
   const discussions = await discussionService.getProblemDiscussions(
     slug,
-    req.query
+    req.query,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, discussions, 'Discussions fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, discussions, "Discussions fetched successfully"),
+    );
 });
 
 /**
@@ -46,12 +47,12 @@ export const getProblemDiscussions = asyncHandler(async (req, res) => {
  */
 export const getDiscussionById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const discussion = await discussionService.getDiscussionById(id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, discussion, 'Discussion fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, discussion, "Discussion fetched successfully"));
 });
 
 /**
@@ -61,16 +62,16 @@ export const getDiscussionById = asyncHandler(async (req, res) => {
  */
 export const updateDiscussion = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const discussion = await discussionService.updateDiscussion(
     id,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, discussion, 'Discussion updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, discussion, "Discussion updated successfully"));
 });
 
 /**
@@ -80,17 +81,15 @@ export const updateDiscussion = asyncHandler(async (req, res) => {
  */
 export const deleteDiscussion = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'MODERATOR';
-  
+  const isAdmin = req.user.role === "ADMIN" || req.user.role === "MODERATOR";
+
   const result = await discussionService.deleteDiscussion(
     id,
     req.user.id,
-    isAdmin
+    isAdmin,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -101,16 +100,10 @@ export const deleteDiscussion = asyncHandler(async (req, res) => {
 export const voteDiscussion = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { value } = req.body;
-  
-  const result = await discussionService.voteDiscussion(
-    id,
-    value,
-    req.user.id
-  );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  const result = await discussionService.voteDiscussion(id, value, req.user.id);
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -120,12 +113,10 @@ export const voteDiscussion = asyncHandler(async (req, res) => {
  */
 export const togglePinDiscussion = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await discussionService.togglePinDiscussion(id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -135,12 +126,10 @@ export const togglePinDiscussion = asyncHandler(async (req, res) => {
  */
 export const toggleLockDiscussion = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await discussionService.toggleLockDiscussion(id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -150,13 +139,19 @@ export const toggleLockDiscussion = asyncHandler(async (req, res) => {
  */
 export const getUserDiscussions = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  
+
   const discussions = await discussionService.getUserDiscussions(
     username,
-    req.query
+    req.query,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, discussions, 'User discussions fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        discussions,
+        "User discussions fetched successfully",
+      ),
+    );
 });

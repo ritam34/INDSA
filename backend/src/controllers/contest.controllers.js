@@ -1,8 +1,8 @@
-import * as contestService from '../services/contest.service.js';
-import * as contestSubmissionService from '../services/contestSubmission.service.js';
-import * as ratingService from '../services/rating.service.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import * as contestService from "../services/contest.service.js";
+import * as contestSubmissionService from "../services/contestSubmission.service.js";
+import * as ratingService from "../services/rating.service.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 /**
  * @desc    Get all contests with filters
@@ -15,14 +15,14 @@ export const getAllContests = asyncHandler(async (req, res) => {
     limit: parseInt(req.query.limit) || 20,
     status: req.query.status, // UPCOMING, ONGOING, COMPLETED
     difficulty: req.query.difficulty,
-    search: req.query.search
+    search: req.query.search,
   };
 
   const result = await contestService.getAllContests(filters);
 
-  res.status(200).json(
-    new ApiResponse(200, result, 'Contests retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Contests retrieved successfully"));
 });
 
 /**
@@ -36,9 +36,9 @@ export const getContestBySlug = asyncHandler(async (req, res) => {
 
   const contest = await contestService.getContestBySlug(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, contest, 'Contest retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, contest, "Contest retrieved successfully"));
 });
 
 /**
@@ -52,9 +52,9 @@ export const createContest = asyncHandler(async (req, res) => {
 
   const contest = await contestService.createContest(contestData, userId);
 
-  res.status(201).json(
-    new ApiResponse(201, contest, 'Contest created successfully')
-  );
+  res
+    .status(201)
+    .json(new ApiResponse(201, contest, "Contest created successfully"));
 });
 
 /**
@@ -69,9 +69,9 @@ export const updateContest = asyncHandler(async (req, res) => {
 
   const contest = await contestService.updateContest(id, updateData, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, contest, 'Contest updated successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, contest, "Contest updated successfully"));
 });
 
 /**
@@ -85,9 +85,9 @@ export const deleteContest = asyncHandler(async (req, res) => {
 
   await contestService.deleteContest(id, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Contest deleted successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Contest deleted successfully"));
 });
 
 /**
@@ -101,9 +101,11 @@ export const registerForContest = asyncHandler(async (req, res) => {
 
   const registration = await contestService.registerForContest(slug, userId);
 
-  res.status(201).json(
-    new ApiResponse(201, registration, 'Successfully registered for contest')
-  );
+  res
+    .status(201)
+    .json(
+      new ApiResponse(201, registration, "Successfully registered for contest"),
+    );
 });
 
 /**
@@ -117,9 +119,9 @@ export const unregisterFromContest = asyncHandler(async (req, res) => {
 
   await contestService.unregisterFromContest(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Successfully unregistered from contest')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Successfully unregistered from contest"));
 });
 
 /**
@@ -133,9 +135,11 @@ export const getContestProblems = asyncHandler(async (req, res) => {
 
   const problems = await contestService.getContestProblems(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, problems, 'Contest problems retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, problems, "Contest problems retrieved successfully"),
+    );
 });
 
 /**
@@ -153,12 +157,12 @@ export const submitContestSolution = asyncHandler(async (req, res) => {
     userId,
     problemId,
     code,
-    languageId
+    languageId,
   );
 
-  res.status(201).json(
-    new ApiResponse(201, submission, 'Solution submitted successfully')
-  );
+  res
+    .status(201)
+    .json(new ApiResponse(201, submission, "Solution submitted successfully"));
 });
 
 /**
@@ -171,11 +175,17 @@ export const getContestLeaderboard = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 50;
 
-  const leaderboard = await contestService.getContestLeaderboard(slug, page, limit);
-
-  res.status(200).json(
-    new ApiResponse(200, leaderboard, 'Leaderboard retrieved successfully')
+  const leaderboard = await contestService.getContestLeaderboard(
+    slug,
+    page,
+    limit,
   );
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, leaderboard, "Leaderboard retrieved successfully"),
+    );
 });
 
 /**
@@ -189,12 +199,14 @@ export const getMyContestSubmissions = asyncHandler(async (req, res) => {
 
   const submissions = await contestSubmissionService.getUserContestSubmissions(
     slug,
-    userId
+    userId,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, submissions, 'Submissions retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, submissions, "Submissions retrieved successfully"),
+    );
 });
 
 /**
@@ -207,9 +219,15 @@ export const getContestStandings = asyncHandler(async (req, res) => {
 
   const standings = await contestService.getContestStandings(slug);
 
-  res.status(200).json(
-    new ApiResponse(200, standings, 'Contest standings retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        standings,
+        "Contest standings retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -224,9 +242,11 @@ export const finalizeContest = asyncHandler(async (req, res) => {
   await ratingService.calculateContestRatings(slug);
   await contestService.finalizeContest(slug, userId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Contest finalized and ratings calculated')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, null, "Contest finalized and ratings calculated"),
+    );
 });
 
 /**
@@ -239,11 +259,17 @@ export const getUserContestHistory = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
 
-  const history = await contestService.getUserContestHistory(username, page, limit);
-
-  res.status(200).json(
-    new ApiResponse(200, history, 'Contest history retrieved successfully')
+  const history = await contestService.getUserContestHistory(
+    username,
+    page,
+    limit,
   );
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, history, "Contest history retrieved successfully"),
+    );
 });
 
 /**
@@ -256,7 +282,9 @@ export const getContestStats = asyncHandler(async (req, res) => {
 
   const stats = await contestService.getContestStats(slug);
 
-  res.status(200).json(
-    new ApiResponse(200, stats, 'Contest statistics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, stats, "Contest statistics retrieved successfully"),
+    );
 });

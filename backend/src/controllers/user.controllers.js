@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as userService from '../services/user.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as userService from "../services/user.service.js";
 
 /**
  * @route   GET /api/users/me
@@ -9,10 +9,10 @@ import * as userService from '../services/user.service.js';
  */
 export const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await userService.getCurrentUser(req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, user, 'Profile fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Profile fetched successfully"));
 });
 
 /**
@@ -23,12 +23,12 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 export const getUserProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const user = await userService.getUserProfile(username, currentUserId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, user, 'User profile fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User profile fetched successfully"));
 });
 
 /**
@@ -38,10 +38,10 @@ export const getUserProfile = asyncHandler(async (req, res) => {
  */
 export const updateProfile = asyncHandler(async (req, res) => {
   const updatedUser = await userService.updateProfile(req.user.id, req.body);
-  
-  return res.status(200).json(
-    new ApiResponse(200, updatedUser, 'Profile updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
 });
 
 /**
@@ -51,16 +51,14 @@ export const updateProfile = asyncHandler(async (req, res) => {
  */
 export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  
+
   const result = await userService.changePassword(
-    req.user.id, 
-    currentPassword, 
-    newPassword
+    req.user.id,
+    currentPassword,
+    newPassword,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -70,10 +68,8 @@ export const changePassword = asyncHandler(async (req, res) => {
  */
 export const deleteAccount = asyncHandler(async (req, res) => {
   const result = await userService.deleteAccount(req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -83,12 +79,12 @@ export const deleteAccount = asyncHandler(async (req, res) => {
  */
 export const getUserStats = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  
+
   const stats = await userService.getUserStats(username);
-  
-  return res.status(200).json(
-    new ApiResponse(200, stats, 'User stats fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stats, "User stats fetched successfully"));
 });
 
 /**
@@ -99,12 +95,22 @@ export const getUserStats = asyncHandler(async (req, res) => {
 export const getUserSubmissions = asyncHandler(async (req, res) => {
   const { username } = req.params;
   const { page = 1, limit = 20 } = req.query;
-  
-  const submissions = await userService.getUserSubmissions(username, page, limit);
-  
-  return res.status(200).json(
-    new ApiResponse(200, submissions, 'User submissions fetched successfully')
+
+  const submissions = await userService.getUserSubmissions(
+    username,
+    page,
+    limit,
   );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        submissions,
+        "User submissions fetched successfully",
+      ),
+    );
 });
 
 /**
@@ -115,17 +121,23 @@ export const getUserSubmissions = asyncHandler(async (req, res) => {
 export const getUserSolvedProblems = asyncHandler(async (req, res) => {
   const { username } = req.params;
   const { page = 1, limit = 20, difficulty } = req.query;
-  
+
   const solvedProblems = await userService.getUserSolvedProblems(
-    username, 
-    page, 
-    limit, 
-    difficulty
+    username,
+    page,
+    limit,
+    difficulty,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, solvedProblems, 'Solved problems fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        solvedProblems,
+        "Solved problems fetched successfully",
+      ),
+    );
 });
 
 /**
@@ -134,13 +146,13 @@ export const getUserSolvedProblems = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const getAllUsers = asyncHandler(async (req, res) => {
-  const filters = req.query;
-  
+  const filters = req.validatedQuery;
+
   const users = await userService.getAllUsers(filters);
-  
-  return res.status(200).json(
-    new ApiResponse(200, users, 'Users fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, "Users fetched successfully"));
 });
 
 /**
@@ -150,10 +162,10 @@ export const getAllUsers = asyncHandler(async (req, res) => {
  */
 export const getUserBadges = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  
+
   const badges = await userService.getUserBadges(username);
-  
-  return res.status(200).json(
-    new ApiResponse(200, badges, 'User badges fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, badges, "User badges fetched successfully"));
 });

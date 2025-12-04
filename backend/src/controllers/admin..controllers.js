@@ -1,6 +1,6 @@
-import * as adminService from '../services/admin.service.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import * as adminService from "../services/admin.service.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 /**
  * @desc    Get admin dashboard statistics
@@ -10,9 +10,15 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const stats = await adminService.getDashboardStats();
 
-  res.status(200).json(
-    new ApiResponse(200, stats, 'Dashboard statistics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        stats,
+        "Dashboard statistics retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -21,13 +27,15 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
  * @access  Private (Admin only)
  */
 export const getUserAnalytics = asyncHandler(async (req, res) => {
-  const period = req.query.period || 'month';
+  const period = req.query.period || "month";
 
   const analytics = await adminService.getUserAnalytics(period);
 
-  res.status(200).json(
-    new ApiResponse(200, analytics, 'User analytics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, analytics, "User analytics retrieved successfully"),
+    );
 });
 
 /**
@@ -38,9 +46,15 @@ export const getUserAnalytics = asyncHandler(async (req, res) => {
 export const getProblemAnalytics = asyncHandler(async (req, res) => {
   const analytics = await adminService.getProblemAnalytics();
 
-  res.status(200).json(
-    new ApiResponse(200, analytics, 'Problem analytics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        analytics,
+        "Problem analytics retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -49,13 +63,19 @@ export const getProblemAnalytics = asyncHandler(async (req, res) => {
  * @access  Private (Admin only)
  */
 export const getSubmissionAnalytics = asyncHandler(async (req, res) => {
-  const period = req.query.period || 'month';
+  const period = req.query.period || "month";
 
   const analytics = await adminService.getSubmissionAnalytics(period);
 
-  res.status(200).json(
-    new ApiResponse(200, analytics, 'Submission analytics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        analytics,
+        "Submission analytics retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -70,15 +90,15 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     role: req.query.role,
     isActive: req.query.isActive,
     search: req.query.search,
-    sortBy: req.query.sortBy || 'createdAt',
-    order: req.query.order || 'desc'
+    sortBy: req.query.sortBy || "createdAt",
+    order: req.query.order || "desc",
   };
 
   const result = await adminService.getAllUsers(filters);
 
-  res.status(200).json(
-    new ApiResponse(200, result, 'Users retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Users retrieved successfully"));
 });
 
 /**
@@ -93,9 +113,9 @@ export const updateUserRole = asyncHandler(async (req, res) => {
 
   const user = await adminService.updateUserRole(userId, role, adminId);
 
-  res.status(200).json(
-    new ApiResponse(200, user, 'User role updated successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "User role updated successfully"));
 });
 
 /**
@@ -110,9 +130,7 @@ export const banUser = asyncHandler(async (req, res) => {
 
   const user = await adminService.banUser(userId, banData, adminId);
 
-  res.status(200).json(
-    new ApiResponse(200, user, 'User banned successfully')
-  );
+  res.status(200).json(new ApiResponse(200, user, "User banned successfully"));
 });
 
 /**
@@ -126,9 +144,9 @@ export const unbanUser = asyncHandler(async (req, res) => {
 
   const user = await adminService.unbanUser(userId, adminId);
 
-  res.status(200).json(
-    new ApiResponse(200, user, 'User unbanned successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "User unbanned successfully"));
 });
 
 /**
@@ -142,9 +160,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
   await adminService.deleteUser(userId, adminId);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'User deleted successfully')
-  );
+  res.status(200).json(new ApiResponse(200, null, "User deleted successfully"));
 });
 
 /**
@@ -155,9 +171,11 @@ export const deleteUser = asyncHandler(async (req, res) => {
 export const getPendingContent = asyncHandler(async (req, res) => {
   const content = await adminService.getPendingContent();
 
-  res.status(200).json(
-    new ApiResponse(200, content, 'Pending content retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, content, "Pending content retrieved successfully"),
+    );
 });
 
 /**
@@ -174,12 +192,12 @@ export const moderateContent = asyncHandler(async (req, res) => {
     contentType,
     contentId,
     action,
-    adminId
+    adminId,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, result, 'Content moderated successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Content moderated successfully"));
 });
 
 /**
@@ -190,12 +208,12 @@ export const moderateContent = asyncHandler(async (req, res) => {
 export const getSystemLogs = asyncHandler(async (req, res) => {
   const filters = {
     level: req.query.level,
-    limit: parseInt(req.query.limit) || 100
+    limit: parseInt(req.query.limit) || 100,
   };
 
   const logs = await adminService.getSystemLogs(filters);
 
-  res.status(200).json(
-    new ApiResponse(200, logs, 'System logs retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, logs, "System logs retrieved successfully"));
 });

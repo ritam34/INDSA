@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as authService from '../services/auth.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as authService from "../services/auth.service.js";
 
 /**
  * @route   POST /api/auth/signup
@@ -9,10 +9,8 @@ import * as authService from '../services/auth.service.js';
  */
 export const signup = asyncHandler(async (req, res) => {
   const result = await authService.signup(req.body);
-  
-  return res.status(201).json(
-    new ApiResponse(201, result, result.message)
-  );
+
+  return res.status(201).json(new ApiResponse(201, result, result.message));
 });
 
 /**
@@ -22,10 +20,8 @@ export const signup = asyncHandler(async (req, res) => {
  */
 export const login = asyncHandler(async (req, res) => {
   const result = await authService.login(req.body);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, 'Login successful')
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, "Login successful"));
 });
 
 /**
@@ -36,10 +32,10 @@ export const login = asyncHandler(async (req, res) => {
 export const refresh = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
   const result = await authService.refreshAccessToken(refreshToken);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, 'Token refreshed successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Token refreshed successfully"));
 });
 
 /**
@@ -50,10 +46,8 @@ export const refresh = asyncHandler(async (req, res) => {
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.body;
   const result = await authService.verifyEmail(token);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -64,10 +58,8 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 export const resendVerification = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const result = await authService.resendVerificationEmail(email);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -78,10 +70,8 @@ export const resendVerification = asyncHandler(async (req, res) => {
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const result = await authService.forgotPassword(email);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -92,10 +82,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 export const resetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword } = req.body;
   const result = await authService.resetPassword(token, newPassword);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -105,8 +93,6 @@ export const resetPassword = asyncHandler(async (req, res) => {
  */
 export const logout = asyncHandler(async (req, res) => {
   const result = await authService.logout(req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });

@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import notificationService from '../services/notification.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import notificationService from "../services/notification.service.js";
 
 /**
  * Get user notifications
@@ -9,14 +9,16 @@ import notificationService from '../services/notification.service.js';
 export const getNotifications = asyncHandler(async (req, res) => {
   const { page, limit, isRead, type } = req.query;
 
-  const result = await notificationService.getUserNotifications(
-    req.user.id,
-    { page, limit, isRead, type }
-  );
+  const result = await notificationService.getUserNotifications(req.user.id, {
+    page,
+    limit,
+    isRead,
+    type,
+  });
 
-  res.status(200).json(
-    new ApiResponse(200, result, 'Notifications retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, result, "Notifications retrieved successfully"));
 });
 
 /**
@@ -26,9 +28,11 @@ export const getNotifications = asyncHandler(async (req, res) => {
 export const getUnreadCount = asyncHandler(async (req, res) => {
   const count = await notificationService.getUnreadCount(req.user.id);
 
-  res.status(200).json(
-    new ApiResponse(200, { count }, 'Unread count retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, { count }, "Unread count retrieved successfully"),
+    );
 });
 
 /**
@@ -38,12 +42,12 @@ export const getUnreadCount = asyncHandler(async (req, res) => {
 export const markAsRead = asyncHandler(async (req, res) => {
   const notification = await notificationService.markAsRead(
     req.params.id,
-    req.user.id
+    req.user.id,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, notification, 'Notification marked as read')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, notification, "Notification marked as read"));
 });
 
 /**
@@ -53,13 +57,15 @@ export const markAsRead = asyncHandler(async (req, res) => {
 export const markAllAsRead = asyncHandler(async (req, res) => {
   const result = await notificationService.markAllAsRead(req.user.id);
 
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      { count: result.count },
-      `${result.count} notification(s) marked as read`
-    )
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { count: result.count },
+        `${result.count} notification(s) marked as read`,
+      ),
+    );
 });
 
 /**
@@ -69,12 +75,10 @@ export const markAllAsRead = asyncHandler(async (req, res) => {
 export const deleteNotification = asyncHandler(async (req, res) => {
   const result = await notificationService.deleteNotification(
     req.params.id,
-    req.user.id
+    req.user.id,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, null, result.message)
-  );
+  res.status(200).json(new ApiResponse(200, null, result.message));
 });
 
 /**
@@ -84,13 +88,15 @@ export const deleteNotification = asyncHandler(async (req, res) => {
 export const deleteReadNotifications = asyncHandler(async (req, res) => {
   const result = await notificationService.deleteReadNotifications(req.user.id);
 
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      { count: result.count },
-      `${result.count} notification(s) deleted`
-    )
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { count: result.count },
+        `${result.count} notification(s) deleted`,
+      ),
+    );
 });
 
 /**
@@ -98,11 +104,19 @@ export const deleteReadNotifications = asyncHandler(async (req, res) => {
  * @route GET /api/notifications/settings
  */
 export const getSettings = asyncHandler(async (req, res) => {
-  const settings = await notificationService.getNotificationSettings(req.user.id);
-
-  res.status(200).json(
-    new ApiResponse(200, settings, 'Notification settings retrieved successfully')
+  const settings = await notificationService.getNotificationSettings(
+    req.user.id,
   );
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        settings,
+        "Notification settings retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -112,10 +126,16 @@ export const getSettings = asyncHandler(async (req, res) => {
 export const updateSettings = asyncHandler(async (req, res) => {
   const settings = await notificationService.updateNotificationSettings(
     req.user.id,
-    req.body
+    req.body,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, settings, 'Notification settings updated successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        settings,
+        "Notification settings updated successfully",
+      ),
+    );
 });

@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as problemService from '../services/problem.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as problemService from "../services/problem.service.js";
 
 /**
  * @route   POST /api/problems
@@ -9,10 +9,10 @@ import * as problemService from '../services/problem.service.js';
  */
 export const createProblem = asyncHandler(async (req, res) => {
   const problem = await problemService.createProblem(req.body, req.user.id);
-  
-  return res.status(201).json(
-    new ApiResponse(201, problem, 'Problem created successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, problem, "Problem created successfully"));
 });
 
 /**
@@ -23,10 +23,10 @@ export const createProblem = asyncHandler(async (req, res) => {
 export const getAllProblems = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
   const problems = await problemService.getProblems(req.query, userId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, problems, 'Problems fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problems, "Problems fetched successfully"));
 });
 
 /**
@@ -37,12 +37,12 @@ export const getAllProblems = asyncHandler(async (req, res) => {
 export const getProblemBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   const userId = req.user?.id;
-  
+
   const problem = await problemService.getProblemBySlug(slug, userId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, problem, 'Problem fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problem, "Problem fetched successfully"));
 });
 
 /**
@@ -52,12 +52,12 @@ export const getProblemBySlug = asyncHandler(async (req, res) => {
  */
 export const updateProblem = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const problem = await problemService.updateProblem(id, req.body, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, problem, 'Problem updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problem, "Problem updated successfully"));
 });
 
 /**
@@ -67,12 +67,10 @@ export const updateProblem = asyncHandler(async (req, res) => {
  */
 export const deleteProblem = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await problemService.deleteProblem(id, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -82,12 +80,12 @@ export const deleteProblem = asyncHandler(async (req, res) => {
  */
 export const addTestCase = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const testCase = await problemService.addTestCase(id, req.body, req.user.id);
-  
-  return res.status(201).json(
-    new ApiResponse(201, testCase, 'Test case added successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, testCase, "Test case added successfully"));
 });
 
 /**
@@ -97,12 +95,16 @@ export const addTestCase = asyncHandler(async (req, res) => {
  */
 export const addCodeSnippet = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
-  const snippet = await problemService.addCodeSnippet(id, req.body, req.user.id);
-  
-  return res.status(201).json(
-    new ApiResponse(201, snippet, 'Code snippet added successfully')
+
+  const snippet = await problemService.addCodeSnippet(
+    id,
+    req.body,
+    req.user.id,
   );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, snippet, "Code snippet added successfully"));
 });
 
 /**
@@ -112,10 +114,10 @@ export const addCodeSnippet = asyncHandler(async (req, res) => {
  */
 export const getProblemStats = asyncHandler(async (req, res) => {
   const stats = await problemService.getProblemStats();
-  
-  return res.status(200).json(
-    new ApiResponse(200, stats, 'Problem stats fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stats, "Problem stats fetched successfully"));
 });
 
 /**
@@ -126,12 +128,14 @@ export const getProblemStats = asyncHandler(async (req, res) => {
 export const searchProblems = asyncHandler(async (req, res) => {
   const { query } = req.params;
   const userId = req.user?.id;
-  
+
   const problems = await problemService.searchProblems(query, userId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, problems, 'Search results fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, problems, "Search results fetched successfully"),
+    );
 });
 
 /**
@@ -141,10 +145,10 @@ export const searchProblems = asyncHandler(async (req, res) => {
  */
 export const getRandomProblem = asyncHandler(async (req, res) => {
   const { difficulty } = req.query;
-  
+
   const problem = await problemService.getRandomProblem(difficulty);
-  
-  return res.status(200).json(
-    new ApiResponse(200, problem, 'Random problem fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problem, "Random problem fetched successfully"));
 });

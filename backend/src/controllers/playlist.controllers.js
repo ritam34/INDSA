@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as playlistService from '../services/playlist.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as playlistService from "../services/playlist.service.js";
 
 /**
  * @route   POST /api/playlists
@@ -9,10 +9,10 @@ import * as playlistService from '../services/playlist.service.js';
  */
 export const createPlaylist = asyncHandler(async (req, res) => {
   const playlist = await playlistService.createPlaylist(req.body, req.user.id);
-  
-  return res.status(201).json(
-    new ApiResponse(201, playlist, 'Playlist created successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, playlist, "Playlist created successfully"));
 });
 
 /**
@@ -22,10 +22,12 @@ export const createPlaylist = asyncHandler(async (req, res) => {
  */
 export const getPublicPlaylists = asyncHandler(async (req, res) => {
   const playlists = await playlistService.getPublicPlaylists(req.query);
-  
-  return res.status(200).json(
-    new ApiResponse(200, playlists, 'Public playlists fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, playlists, "Public playlists fetched successfully"),
+    );
 });
 
 /**
@@ -36,16 +38,18 @@ export const getPublicPlaylists = asyncHandler(async (req, res) => {
 export const getUserPlaylists = asyncHandler(async (req, res) => {
   const { username } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const playlists = await playlistService.getUserPlaylists(
     username,
     req.query,
-    currentUserId
+    currentUserId,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, playlists, 'User playlists fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, playlists, "User playlists fetched successfully"),
+    );
 });
 
 /**
@@ -56,12 +60,12 @@ export const getUserPlaylists = asyncHandler(async (req, res) => {
 export const getPlaylistById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const playlist = await playlistService.getPlaylistById(id, currentUserId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, playlist, 'Playlist fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "Playlist fetched successfully"));
 });
 
 /**
@@ -72,16 +76,16 @@ export const getPlaylistById = asyncHandler(async (req, res) => {
 export const getPlaylistBySlug = asyncHandler(async (req, res) => {
   const { username, slug } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const playlist = await playlistService.getPlaylistBySlug(
     username,
     slug,
-    currentUserId
+    currentUserId,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, playlist, 'Playlist fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "Playlist fetched successfully"));
 });
 
 /**
@@ -91,16 +95,16 @@ export const getPlaylistBySlug = asyncHandler(async (req, res) => {
  */
 export const updatePlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const playlist = await playlistService.updatePlaylist(
     id,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, playlist, 'Playlist updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "Playlist updated successfully"));
 });
 
 /**
@@ -110,12 +114,10 @@ export const updatePlaylist = asyncHandler(async (req, res) => {
  */
 export const deletePlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await playlistService.deletePlaylist(id, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -125,16 +127,18 @@ export const deletePlaylist = asyncHandler(async (req, res) => {
  */
 export const addProblemToPlaylist = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const problem = await playlistService.addProblemToPlaylist(
     id,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(201).json(
-    new ApiResponse(201, problem, 'Problem added to playlist successfully')
-  );
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, problem, "Problem added to playlist successfully"),
+    );
 });
 
 /**
@@ -144,16 +148,14 @@ export const addProblemToPlaylist = asyncHandler(async (req, res) => {
  */
 export const removeProblemFromPlaylist = asyncHandler(async (req, res) => {
   const { id, problemId } = req.params;
-  
+
   const result = await playlistService.removeProblemFromPlaylist(
     id,
     problemId,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -164,14 +166,12 @@ export const removeProblemFromPlaylist = asyncHandler(async (req, res) => {
 export const reorderProblems = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { problemOrders } = req.body;
-  
+
   const result = await playlistService.reorderProblems(
     id,
     problemOrders,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });

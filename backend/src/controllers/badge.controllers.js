@@ -1,6 +1,6 @@
-import badgeService from '../services/badge.service.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
+import badgeService from "../services/badge.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 
 /**
  * Get all badges
@@ -12,12 +12,12 @@ export const getAllBadges = asyncHandler(async (req, res) => {
   const badges = await badgeService.getAllBadges({
     type,
     rarity,
-    isActive: isActive === 'false' ? false : true
+    isActive: isActive === "false" ? false : true,
   });
 
-  res.status(200).json(
-    new ApiResponse(200, badges, 'Badges retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, badges, "Badges retrieved successfully"));
 });
 
 /**
@@ -27,9 +27,9 @@ export const getAllBadges = asyncHandler(async (req, res) => {
 export const getBadgeById = asyncHandler(async (req, res) => {
   const badge = await badgeService.getBadgeById(req.params.id);
 
-  res.status(200).json(
-    new ApiResponse(200, badge, 'Badge retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, badge, "Badge retrieved successfully"));
 });
 
 /**
@@ -42,12 +42,12 @@ export const getMyBadges = asyncHandler(async (req, res) => {
   const badges = await badgeService.getUserBadges(req.user.id, {
     category: type,
     rarity,
-    includeProgress: includeProgress === 'true'
+    includeProgress: includeProgress === "true",
   });
 
-  res.status(200).json(
-    new ApiResponse(200, badges, 'User badges retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, badges, "User badges retrieved successfully"));
 });
 
 /**
@@ -60,22 +60,22 @@ export const getUserBadges = asyncHandler(async (req, res) => {
 
   // Get user by username
   const user = await prisma.user.findUnique({
-    where: { username }
+    where: { username },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const badges = await badgeService.getUserBadges(user.id, {
     category: type,
     rarity,
-    includeProgress: false
+    includeProgress: false,
   });
 
-  res.status(200).json(
-    new ApiResponse(200, badges, 'User badges retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, badges, "User badges retrieved successfully"));
 });
 
 /**
@@ -90,12 +90,12 @@ export const checkEligibility = asyncHandler(async (req, res) => {
       200,
       {
         newBadgesCount: newBadges.length,
-        badges: newBadges
+        badges: newBadges,
       },
       newBadges.length > 0
         ? `Congratulations! You earned ${newBadges.length} new badge(s)!`
-        : 'No new badges earned'
-    )
+        : "No new badges earned",
+    ),
   );
 });
 
@@ -109,12 +109,14 @@ export const getBadgeProgress = asyncHandler(async (req, res) => {
   const badge = await badgeService.getBadgeById(id);
   const progress = await badgeService.calculateBadgeProgress(
     req.user.id,
-    badge
+    badge,
   );
 
-  res.status(200).json(
-    new ApiResponse(200, progress, 'Badge progress retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, progress, "Badge progress retrieved successfully"),
+    );
 });
 
 /**
@@ -124,13 +126,17 @@ export const getBadgeProgress = asyncHandler(async (req, res) => {
 export const getBadgeLeaderboard = asyncHandler(async (req, res) => {
   const { limit = 50 } = req.query;
 
-  const leaderboard = await badgeService.getBadgeLeaderboard(
-    parseInt(limit)
-  );
+  const leaderboard = await badgeService.getBadgeLeaderboard(parseInt(limit));
 
-  res.status(200).json(
-    new ApiResponse(200, leaderboard, 'Badge leaderboard retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        leaderboard,
+        "Badge leaderboard retrieved successfully",
+      ),
+    );
 });
 
 /**
@@ -140,9 +146,11 @@ export const getBadgeLeaderboard = asyncHandler(async (req, res) => {
 export const getRarityStatistics = asyncHandler(async (req, res) => {
   const stats = await badgeService.getRarityStatistics();
 
-  res.status(200).json(
-    new ApiResponse(200, stats, 'Rarity statistics retrieved successfully')
-  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, stats, "Rarity statistics retrieved successfully"),
+    );
 });
 
 /**
@@ -153,9 +161,9 @@ export const getRarityStatistics = asyncHandler(async (req, res) => {
 export const createBadge = asyncHandler(async (req, res) => {
   const badge = await badgeService.createBadge(req.body);
 
-  res.status(201).json(
-    new ApiResponse(201, badge, 'Badge created successfully')
-  );
+  res
+    .status(201)
+    .json(new ApiResponse(201, badge, "Badge created successfully"));
 });
 
 /**
@@ -166,9 +174,9 @@ export const createBadge = asyncHandler(async (req, res) => {
 export const updateBadge = asyncHandler(async (req, res) => {
   const badge = await badgeService.updateBadge(req.params.id, req.body);
 
-  res.status(200).json(
-    new ApiResponse(200, badge, 'Badge updated successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, badge, "Badge updated successfully"));
 });
 
 /**
@@ -179,7 +187,7 @@ export const updateBadge = asyncHandler(async (req, res) => {
 export const deleteBadge = asyncHandler(async (req, res) => {
   await badgeService.deleteBadge(req.params.id);
 
-  res.status(200).json(
-    new ApiResponse(200, null, 'Badge deleted successfully')
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Badge deleted successfully"));
 });

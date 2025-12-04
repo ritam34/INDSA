@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as solutionService from '../services/solution.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as solutionService from "../services/solution.service.js";
 
 /**
  * @route   POST /api/solutions/problems/:slug
@@ -9,16 +9,16 @@ import * as solutionService from '../services/solution.service.js';
  */
 export const createSolution = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  
+
   const solution = await solutionService.createSolution(
     slug,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(201).json(
-    new ApiResponse(201, solution, 'Solution created successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, solution, "Solution created successfully"));
 });
 
 /**
@@ -29,16 +29,16 @@ export const createSolution = asyncHandler(async (req, res) => {
 export const getProblemSolutions = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const solutions = await solutionService.getProblemSolutions(
     slug,
     req.query,
-    currentUserId
+    currentUserId,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, solutions, 'Solutions fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, solutions, "Solutions fetched successfully"));
 });
 
 /**
@@ -49,12 +49,12 @@ export const getProblemSolutions = asyncHandler(async (req, res) => {
 export const getSolutionById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const currentUserId = req.user?.id;
-  
+
   const solution = await solutionService.getSolutionById(id, currentUserId);
-  
-  return res.status(200).json(
-    new ApiResponse(200, solution, 'Solution fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, solution, "Solution fetched successfully"));
 });
 
 /**
@@ -64,16 +64,16 @@ export const getSolutionById = asyncHandler(async (req, res) => {
  */
 export const updateSolution = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const solution = await solutionService.updateSolution(
     id,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, solution, 'Solution updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, solution, "Solution updated successfully"));
 });
 
 /**
@@ -83,17 +83,11 @@ export const updateSolution = asyncHandler(async (req, res) => {
  */
 export const deleteSolution = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'MODERATOR';
-  
-  const result = await solutionService.deleteSolution(
-    id,
-    req.user.id,
-    isAdmin
-  );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+  const isAdmin = req.user.role === "ADMIN" || req.user.role === "MODERATOR";
+
+  const result = await solutionService.deleteSolution(id, req.user.id, isAdmin);
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -104,16 +98,10 @@ export const deleteSolution = asyncHandler(async (req, res) => {
 export const voteSolution = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { value } = req.body;
-  
-  const result = await solutionService.voteSolution(
-    id,
-    value,
-    req.user.id
-  );
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  const result = await solutionService.voteSolution(id, value, req.user.id);
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -123,15 +111,14 @@ export const voteSolution = asyncHandler(async (req, res) => {
  */
 export const getUserSolutions = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  
-  const solutions = await solutionService.getUserSolutions(
-    username,
-    req.query
-  );
-  
-  return res.status(200).json(
-    new ApiResponse(200, solutions, 'User solutions fetched successfully')
-  );
+
+  const solutions = await solutionService.getUserSolutions(username, req.query);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, solutions, "User solutions fetched successfully"),
+    );
 });
 
 /**
@@ -141,10 +128,10 @@ export const getUserSolutions = asyncHandler(async (req, res) => {
  */
 export const markAsOfficial = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const solution = await solutionService.markAsOfficial(id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, solution, 'Solution marked as official')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, solution, "Solution marked as official"));
 });

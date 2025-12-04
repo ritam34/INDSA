@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as statsService from '../services/stats.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as statsService from "../services/stats.service.js";
 
 /**
  * @route   GET /api/stats/leaderboard
@@ -8,16 +8,18 @@ import * as statsService from '../services/stats.service.js';
  * @access  Public
  */
 export const getLeaderboard = asyncHandler(async (req, res) => {
-  const { limit = 100, sortBy = 'reputation' } = req.query;
-  
+  const { limit = 100, sortBy = "reputation" } = req.query;
+
   const leaderboard = await statsService.getLeaderboard(
-    parseInt(limit), 
-    sortBy
+    parseInt(limit),
+    sortBy,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, leaderboard, 'Leaderboard fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, leaderboard, "Leaderboard fetched successfully"),
+    );
 });
 
 /**
@@ -27,9 +29,8 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
  */
 export const updateRankings = asyncHandler(async (req, res) => {
   await statsService.updateGlobalRanking();
-  
-  return res.status(200).json(
-    new ApiResponse(200, null, 'Rankings updated successfully')
-  );
-});
 
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Rankings updated successfully"));
+});

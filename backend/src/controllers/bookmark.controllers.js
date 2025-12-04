@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/apiResponse.js';
-import * as bookmarkService from '../services/bookmark.service.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import * as bookmarkService from "../services/bookmark.service.js";
 
 /**
  * @route   POST /api/bookmarks
@@ -9,10 +9,10 @@ import * as bookmarkService from '../services/bookmark.service.js';
  */
 export const createBookmark = asyncHandler(async (req, res) => {
   const bookmark = await bookmarkService.createBookmark(req.body, req.user.id);
-  
-  return res.status(201).json(
-    new ApiResponse(201, bookmark, 'Bookmark created successfully')
-  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, bookmark, "Bookmark created successfully"));
 });
 
 /**
@@ -23,12 +23,12 @@ export const createBookmark = asyncHandler(async (req, res) => {
 export const getUserBookmarks = asyncHandler(async (req, res) => {
   const bookmarks = await bookmarkService.getUserBookmarks(
     req.user.id,
-    req.query
+    req.query,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, bookmarks, 'Bookmarks fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, bookmarks, "Bookmarks fetched successfully"));
 });
 
 /**
@@ -38,10 +38,10 @@ export const getUserBookmarks = asyncHandler(async (req, res) => {
  */
 export const getBookmarkStats = asyncHandler(async (req, res) => {
   const stats = await bookmarkService.getBookmarkStats(req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, stats, 'Bookmark stats fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stats, "Bookmark stats fetched successfully"));
 });
 
 /**
@@ -51,10 +51,10 @@ export const getBookmarkStats = asyncHandler(async (req, res) => {
  */
 export const getUserBookmarkTags = asyncHandler(async (req, res) => {
   const tags = await bookmarkService.getUserBookmarkTags(req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, tags, 'Bookmark tags fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tags, "Bookmark tags fetched successfully"));
 });
 
 /**
@@ -64,12 +64,12 @@ export const getUserBookmarkTags = asyncHandler(async (req, res) => {
  */
 export const getBookmarkById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const bookmark = await bookmarkService.getBookmarkById(id, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, bookmark, 'Bookmark fetched successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, bookmark, "Bookmark fetched successfully"));
 });
 
 /**
@@ -79,16 +79,16 @@ export const getBookmarkById = asyncHandler(async (req, res) => {
  */
 export const updateBookmark = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const bookmark = await bookmarkService.updateBookmark(
     id,
     req.body,
-    req.user.id
+    req.user.id,
   );
-  
-  return res.status(200).json(
-    new ApiResponse(200, bookmark, 'Bookmark updated successfully')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, bookmark, "Bookmark updated successfully"));
 });
 
 /**
@@ -98,12 +98,10 @@ export const updateBookmark = asyncHandler(async (req, res) => {
  */
 export const deleteBookmark = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await bookmarkService.deleteBookmark(id, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -113,12 +111,10 @@ export const deleteBookmark = asyncHandler(async (req, res) => {
  */
 export const toggleBookmark = asyncHandler(async (req, res) => {
   const { problemId } = req.params;
-  
+
   const result = await bookmarkService.toggleBookmark(problemId, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, result.message)
-  );
+
+  return res.status(200).json(new ApiResponse(200, result, result.message));
 });
 
 /**
@@ -128,10 +124,10 @@ export const toggleBookmark = asyncHandler(async (req, res) => {
  */
 export const checkBookmark = asyncHandler(async (req, res) => {
   const { problemId } = req.params;
-  
+
   const result = await bookmarkService.isBookmarked(problemId, req.user.id);
-  
-  return res.status(200).json(
-    new ApiResponse(200, result, 'Bookmark status checked')
-  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Bookmark status checked"));
 });
