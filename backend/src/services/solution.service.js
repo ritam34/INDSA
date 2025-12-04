@@ -1,5 +1,5 @@
 import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
+import {ApiError} from '../utils/apiError.js';
 import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
 import logger from '../utils/logger.js';
 
@@ -339,7 +339,6 @@ export const voteSolution = async (solutionId, value, userId) => {
     return { message: 'Vote changed', action: 'changed' };
   }
 
-  // Create new vote
   await prisma.solutionVote.create({
     data: {
       userId,
@@ -348,7 +347,6 @@ export const voteSolution = async (solutionId, value, userId) => {
     }
   });
 
-  // Update solution vote count
   const updateField = value === 1 ? 'upvotes' : 'downvotes';
   await prisma.solution.update({
     where: { id: solutionId },

@@ -1,8 +1,11 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { generateSlug, generateSlugWithRandom } from '../utils/slug.utils.js';
-import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import { generateSlug, generateSlugWithRandom } from "../utils/slug.utils.js";
+import {
+  sanitizePaginationParams,
+  createPaginatedResponse,
+} from "../utils/pagination.utils.js";
+import logger from "../utils/logger.js";
 
 export const createPlaylist = async (playlistData, userId) => {
   const { name, description, isPublic } = playlistData;
@@ -12,8 +15,8 @@ export const createPlaylist = async (playlistData, userId) => {
     where: {
       userId,
       slug,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   if (existingPlaylist) {
@@ -26,7 +29,7 @@ export const createPlaylist = async (playlistData, userId) => {
       slug,
       description,
       isPublic,
-      userId
+      userId,
     },
     include: {
       user: {
@@ -34,30 +37,34 @@ export const createPlaylist = async (playlistData, userId) => {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
-      }
-    }
+          avatar: true,
+        },
+      },
+    },
   });
 
-  logger.info('Playlist created', { playlistId: playlist.id, userId });
+  logger.info("Playlist created", { playlistId: playlist.id, userId });
 
   return playlist;
 };
 
-export const getUserPlaylists = async (username, filters, currentUserId = null) => {
+export const getUserPlaylists = async (
+  username,
+  filters,
+  currentUserId = null,
+) => {
   const { page, limit, search } = filters;
 
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const { skip, limit: pageLimit } = sanitizePaginationParams(page, limit);
@@ -67,11 +74,11 @@ export const getUserPlaylists = async (username, filters, currentUserId = null) 
     deletedAt: null,
     ...(search && {
       OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ],
     }),
-    ...(currentUserId !== user.id && { isPublic: true })
+    ...(currentUserId !== user.id && { isPublic: true }),
   };
 
   const [playlists, total] = await Promise.all([
@@ -88,21 +95,21 @@ export const getUserPlaylists = async (username, filters, currentUserId = null) 
         _count: {
           select: {
             problems: {
-              where: { deletedAt: null }
-            }
-          }
-        }
+              where: { deletedAt: null },
+            },
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.playlist.count({ where })
+    prisma.playlist.count({ where }),
   ]);
 
-  const playlistsWithCount = playlists.map(p => ({
+  const playlistsWithCount = playlists.map((p) => ({
     ...p,
-    problemCount: p._count.problems
+    problemCount: p._count.problems,
   }));
 
   return createPaginatedResponse(playlistsWithCount, page, limit, total);
@@ -110,9 +117,9 @@ export const getUserPlaylists = async (username, filters, currentUserId = null) 
 
 export const getPlaylistById = async (playlistId, currentUserId = null) => {
   const playlist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
+      deletedAt: null,
     },
     include: {
       user: {
@@ -120,8 +127,8 @@ export const getPlaylistById = async (playlistId, currentUserId = null) => {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
+          avatar: true,
+        },
       },
       problems: {
         where: { deletedAt: null },
@@ -133,64 +140,68 @@ export const getPlaylistById = async (playlistId, currentUserId = null) => {
               slug: true,
               difficulty: true,
               tags: true,
-              acceptanceRate: true
-            }
-          }
+              acceptanceRate: true,
+            },
+          },
         },
-        orderBy: { order: 'asc' }
-      }
-    }
+        orderBy: { order: "asc" },
+      },
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (!playlist.isPublic && playlist.userId !== currentUserId) {
-    throw new ApiError(403, 'You do not have access to this playlist');
+    throw new ApiError(403, "You do not have access to this playlist");
   }
 
   if (currentUserId) {
     const solvedProblemIds = await prisma.problemSolved.findMany({
-      where: { 
+      where: {
         userId: currentUserId,
-        deletedAt: null 
+        deletedAt: null,
       },
-      select: { problemId: true }
+      select: { problemId: true },
     });
 
-    const solvedIds = new Set(solvedProblemIds.map(p => p.problemId));
+    const solvedIds = new Set(solvedProblemIds.map((p) => p.problemId));
 
-    playlist.problems = playlist.problems.map(pp => ({
+    playlist.problems = playlist.problems.map((pp) => ({
       ...pp,
       problem: {
         ...pp.problem,
-        isSolved: solvedIds.has(pp.problem.id)
-      }
+        isSolved: solvedIds.has(pp.problem.id),
+      },
     }));
   }
 
   return playlist;
 };
 
-export const getPlaylistBySlug = async (username, slug, currentUserId = null) => {
+export const getPlaylistBySlug = async (
+  username,
+  slug,
+  currentUserId = null,
+) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const playlist = await prisma.playlist.findFirst({
     where: {
       userId: user.id,
       slug,
-      deletedAt: null
+      deletedAt: null,
     },
     include: {
       user: {
@@ -198,8 +209,8 @@ export const getPlaylistBySlug = async (username, slug, currentUserId = null) =>
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
+          avatar: true,
+        },
       },
       problems: {
         where: { deletedAt: null },
@@ -211,39 +222,39 @@ export const getPlaylistBySlug = async (username, slug, currentUserId = null) =>
               slug: true,
               difficulty: true,
               tags: true,
-              acceptanceRate: true
-            }
-          }
+              acceptanceRate: true,
+            },
+          },
         },
-        orderBy: { order: 'asc' }
-      }
-    }
+        orderBy: { order: "asc" },
+      },
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (!playlist.isPublic && playlist.userId !== currentUserId) {
-    throw new ApiError(403, 'You do not have access to this playlist');
+    throw new ApiError(403, "You do not have access to this playlist");
   }
   if (currentUserId) {
     const solvedProblemIds = await prisma.problemSolved.findMany({
-      where: { 
+      where: {
         userId: currentUserId,
-        deletedAt: null 
+        deletedAt: null,
       },
-      select: { problemId: true }
+      select: { problemId: true },
     });
 
-    const solvedIds = new Set(solvedProblemIds.map(p => p.problemId));
+    const solvedIds = new Set(solvedProblemIds.map((p) => p.problemId));
 
-    playlist.problems = playlist.problems.map(pp => ({
+    playlist.problems = playlist.problems.map((pp) => ({
       ...pp,
       problem: {
         ...pp.problem,
-        isSolved: solvedIds.has(pp.problem.id)
-      }
+        isSolved: solvedIds.has(pp.problem.id),
+      },
     }));
   }
 
@@ -252,18 +263,21 @@ export const getPlaylistBySlug = async (username, slug, currentUserId = null) =>
 
 export const updatePlaylist = async (playlistId, updateData, userId) => {
   const existingPlaylist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!existingPlaylist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (existingPlaylist.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to update this playlist');
+    throw new ApiError(
+      403,
+      "You do not have permission to update this playlist",
+    );
   }
   if (updateData.name) {
     let slug = generateSlug(updateData.name);
@@ -272,8 +286,8 @@ export const updatePlaylist = async (playlistId, updateData, userId) => {
         userId,
         slug,
         id: { not: playlistId },
-        deletedAt: null
-      }
+        deletedAt: null,
+      },
     });
 
     if (slugExists) {
@@ -285,85 +299,91 @@ export const updatePlaylist = async (playlistId, updateData, userId) => {
 
   const updatedPlaylist = await prisma.playlist.update({
     where: { id: playlistId },
-    data: updateData
+    data: updateData,
   });
 
-  logger.info('Playlist updated', { playlistId, userId });
+  logger.info("Playlist updated", { playlistId, userId });
 
   return updatedPlaylist;
 };
 
 export const deletePlaylist = async (playlistId, userId) => {
   const playlist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (playlist.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to delete this playlist');
+    throw new ApiError(
+      403,
+      "You do not have permission to delete this playlist",
+    );
   }
 
   await prisma.playlist.update({
     where: { id: playlistId },
-    data: { deletedAt: new Date() }
+    data: { deletedAt: new Date() },
   });
 
-  logger.info('Playlist deleted', { playlistId, userId });
+  logger.info("Playlist deleted", { playlistId, userId });
 
-  return { message: 'Playlist deleted successfully' };
+  return { message: "Playlist deleted successfully" };
 };
 
 export const addProblemToPlaylist = async (playlistId, problemData, userId) => {
   const { problemId, notes } = problemData;
   const playlist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (playlist.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to modify this playlist');
+    throw new ApiError(
+      403,
+      "You do not have permission to modify this playlist",
+    );
   }
   const problem = await prisma.problem.findUnique({
-    where: { 
+    where: {
       id: problemId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
   const existingProblem = await prisma.problemInPlaylist.findFirst({
     where: {
       playlistId,
       problemId,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   if (existingProblem) {
-    throw new ApiError(400, 'Problem already exists in this playlist');
+    throw new ApiError(400, "Problem already exists in this playlist");
   }
 
   const lastProblem = await prisma.problemInPlaylist.findFirst({
-    where: { 
+    where: {
       playlistId,
-      deletedAt: null 
+      deletedAt: null,
     },
-    orderBy: { order: 'desc' },
-    select: { order: true }
+    orderBy: { order: "desc" },
+    select: { order: true },
   });
 
   const nextOrder = lastProblem ? lastProblem.order + 1 : 1;
@@ -373,7 +393,7 @@ export const addProblemToPlaylist = async (playlistId, problemData, userId) => {
       playlistId,
       problemId,
       order: nextOrder,
-      notes: notes || null
+      notes: notes || null,
     },
     include: {
       problem: {
@@ -382,82 +402,96 @@ export const addProblemToPlaylist = async (playlistId, problemData, userId) => {
           title: true,
           slug: true,
           difficulty: true,
-          tags: true
-        }
-      }
-    }
+          tags: true,
+        },
+      },
+    },
   });
 
-  logger.info('Problem added to playlist', { playlistId, problemId, userId });
+  logger.info("Problem added to playlist", { playlistId, problemId, userId });
 
   return problemInPlaylist;
 };
 
-export const removeProblemFromPlaylist = async (playlistId, problemId, userId) => {
+export const removeProblemFromPlaylist = async (
+  playlistId,
+  problemId,
+  userId,
+) => {
   const playlist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (playlist.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to modify this playlist');
+    throw new ApiError(
+      403,
+      "You do not have permission to modify this playlist",
+    );
   }
   const problemInPlaylist = await prisma.problemInPlaylist.findFirst({
     where: {
       playlistId,
       problemId,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   if (!problemInPlaylist) {
-    throw new ApiError(404, 'Problem not found in this playlist');
+    throw new ApiError(404, "Problem not found in this playlist");
   }
 
   await prisma.problemInPlaylist.update({
     where: { id: problemInPlaylist.id },
-    data: { deletedAt: new Date() }
+    data: { deletedAt: new Date() },
   });
 
-  logger.info('Problem removed from playlist', { playlistId, problemId, userId });
+  logger.info("Problem removed from playlist", {
+    playlistId,
+    problemId,
+    userId,
+  });
 
-  return { message: 'Problem removed from playlist successfully' };
+  return { message: "Problem removed from playlist successfully" };
 };
 
 export const reorderProblems = async (playlistId, problemOrders, userId) => {
   const playlist = await prisma.playlist.findUnique({
-    where: { 
+    where: {
       id: playlistId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!playlist) {
-    throw new ApiError(404, 'Playlist not found');
+    throw new ApiError(404, "Playlist not found");
   }
 
   if (playlist.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to modify this playlist');
+    throw new ApiError(
+      403,
+      "You do not have permission to modify this playlist",
+    );
   }
 
   await Promise.all(
     problemOrders.map(({ problemInPlaylistId, order }) =>
       prisma.problemInPlaylist.update({
         where: { id: problemInPlaylistId },
-        data: { order }
-      })
-    )
+        data: { order },
+      }),
+    ),
   );
 
-  logger.info('Playlist problems reordered', { playlistId, userId });
+  logger.info("Playlist problems reordered", { playlistId, userId });
 
-  return { message: 'Problems reordered successfully' };
+  return { message: "Problems reordered successfully" };
 };
 
 export const getPublicPlaylists = async (filters) => {
@@ -469,10 +503,10 @@ export const getPublicPlaylists = async (filters) => {
     deletedAt: null,
     ...(search && {
       OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
-    })
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ],
+    }),
   };
 
   const [playlists, total] = await Promise.all([
@@ -489,27 +523,27 @@ export const getPublicPlaylists = async (filters) => {
             id: true,
             fullName: true,
             username: true,
-            avatar: true
-          }
+            avatar: true,
+          },
         },
         _count: {
           select: {
             problems: {
-              where: { deletedAt: null }
-            }
-          }
-        }
+              where: { deletedAt: null },
+            },
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.playlist.count({ where })
+    prisma.playlist.count({ where }),
   ]);
 
-  const playlistsWithCount = playlists.map(p => ({
+  const playlistsWithCount = playlists.map((p) => ({
     ...p,
-    problemCount: p._count.problems
+    problemCount: p._count.problems,
   }));
 
   return createPaginatedResponse(playlistsWithCount, page, limit, total);

@@ -1,21 +1,24 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import {
+  sanitizePaginationParams,
+  createPaginatedResponse,
+} from "../utils/pagination.utils.js";
+import logger from "../utils/logger.js";
 
 export const createDiscussion = async (problemSlug, discussionData, userId) => {
   const { title, content } = discussionData;
 
   const problem = await prisma.problem.findUnique({
-    where: { 
+    where: {
       slug: problemSlug,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
 
   const discussion = await prisma.discussion.create({
@@ -23,7 +26,7 @@ export const createDiscussion = async (problemSlug, discussionData, userId) => {
       problemId: problem.id,
       userId,
       title,
-      content
+      content,
     },
     include: {
       user: {
@@ -31,20 +34,20 @@ export const createDiscussion = async (problemSlug, discussionData, userId) => {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
+          avatar: true,
+        },
       },
       problem: {
         select: {
           id: true,
           title: true,
-          slug: true
-        }
-      }
-    }
+          slug: true,
+        },
+      },
+    },
   });
 
-  logger.info('Discussion created', { discussionId: discussion.id, userId });
+  logger.info("Discussion created", { discussionId: discussion.id, userId });
 
   return discussion;
 };
@@ -54,11 +57,11 @@ export const getProblemDiscussions = async (problemSlug, filters) => {
 
   const problem = await prisma.problem.findUnique({
     where: { slug: problemSlug },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
 
   const { skip, limit: pageLimit } = sanitizePaginationParams(page, limit);
@@ -68,18 +71,21 @@ export const getProblemDiscussions = async (problemSlug, filters) => {
     deletedAt: null,
     ...(search && {
       OR: [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } }
-      ]
-    })
+        { title: { contains: search, mode: "insensitive" } },
+        { content: { contains: search, mode: "insensitive" } },
+      ],
+    }),
   };
 
   const orderByMap = {
-    recent: { createdAt: 'desc' },
-    popular: { views: 'desc' },
-    most_voted: { upvotes: 'desc' },
-    most_viewed: { views: 'desc' }
+    recent: { createdAt: "desc" },
+    popular: { views: "desc" },
+    most_voted: { upvotes: "desc" },
+    most_viewed: { views: "desc" },
+    title: { title: "asc" },
   };
+
+  const sortOrder = orderByMap[sortBy] || orderByMap.recent;
 
   const [discussions, total] = await Promise.all([
     prisma.discussion.findMany({
@@ -100,30 +106,27 @@ export const getProblemDiscussions = async (problemSlug, filters) => {
             id: true,
             fullName: true,
             username: true,
-            avatar: true
-          }
+            avatar: true,
+          },
         },
         _count: {
           select: {
             comments: {
-              where: { deletedAt: null }
-            }
-          }
-        }
+              where: { deletedAt: null },
+            },
+          },
+        },
       },
-      orderBy: [
-        { isPinned: 'desc' },
-        ...(Array.isArray(orderByMap[sortBy]) ? orderByMap[sortBy] : [orderByMap[sortBy]])
-      ],
+      orderBy: [{ isPinned: "desc" }, sortOrder],
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.discussion.count({ where })
+    prisma.discussion.count({ where }),
   ]);
 
-  const discussionsWithCount = discussions.map(d => ({
+  const discussionsWithCount = discussions.map((d) => ({
     ...d,
-    commentCount: d._count.comments
+    commentCount: d._count.comments,
   }));
 
   return createPaginatedResponse(discussionsWithCount, page, limit, total);
@@ -131,9 +134,9 @@ export const getProblemDiscussions = async (problemSlug, filters) => {
 
 export const getDiscussionById = async (discussionId) => {
   const discussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
+      deletedAt: null,
     },
     include: {
       user: {
@@ -141,20 +144,20 @@ export const getDiscussionById = async (discussionId) => {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
+          avatar: true,
+        },
       },
       problem: {
         select: {
           id: true,
           title: true,
-          slug: true
-        }
+          slug: true,
+        },
       },
       comments: {
-        where: { 
+        where: {
           deletedAt: null,
-          parentId: null 
+          parentId: null,
         },
         include: {
           user: {
@@ -162,8 +165,8 @@ export const getDiscussionById = async (discussionId) => {
               id: true,
               fullName: true,
               username: true,
-              avatar: true
-            }
+              avatar: true,
+            },
           },
           replies: {
             where: { deletedAt: null },
@@ -173,59 +176,64 @@ export const getDiscussionById = async (discussionId) => {
                   id: true,
                   fullName: true,
                   username: true,
-                  avatar: true
-                }
-              }
+                  avatar: true,
+                },
+              },
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: { createdAt: "asc" },
           },
           _count: {
             select: {
-              votes: true
-            }
-          }
+              votes: true,
+            },
+          },
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       },
       _count: {
         select: {
           comments: {
-            where: { deletedAt: null }
-          }
-        }
-      }
-    }
+            where: { deletedAt: null },
+          },
+        },
+      },
+    },
   });
 
   if (!discussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
-  prisma.discussion.update({
-    where: { id: discussionId },
-    data: { views: { increment: 1 } }
-  }).catch(() => {});
+  prisma.discussion
+    .update({
+      where: { id: discussionId },
+      data: { views: { increment: 1 } },
+    })
+    .catch(() => {});
 
   return {
     ...discussion,
-    commentCount: discussion._count.comments
+    commentCount: discussion._count.comments,
   };
 };
 
 export const updateDiscussion = async (discussionId, updateData, userId) => {
   const existingDiscussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!existingDiscussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
   if (existingDiscussion.userId !== userId) {
-    throw new ApiError(403, 'You do not have permission to update this discussion');
+    throw new ApiError(
+      403,
+      "You do not have permission to update this discussion",
+    );
   }
 
   const updatedDiscussion = await prisma.discussion.update({
@@ -237,62 +245,69 @@ export const updateDiscussion = async (discussionId, updateData, userId) => {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
-      }
-    }
+          avatar: true,
+        },
+      },
+    },
   });
 
-  logger.info('Discussion updated', { discussionId, userId });
+  logger.info("Discussion updated", { discussionId, userId });
 
   return updatedDiscussion;
 };
 
-export const deleteDiscussion = async (discussionId, userId, isAdmin = false) => {
+export const deleteDiscussion = async (
+  discussionId,
+  userId,
+  isAdmin = false,
+) => {
   const discussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!discussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
   if (discussion.userId !== userId && !isAdmin) {
-    throw new ApiError(403, 'You do not have permission to delete this discussion');
+    throw new ApiError(
+      403,
+      "You do not have permission to delete this discussion",
+    );
   }
 
   await prisma.discussion.update({
     where: { id: discussionId },
-    data: { deletedAt: new Date() }
+    data: { deletedAt: new Date() },
   });
 
-  logger.info('Discussion deleted', { discussionId, userId });
+  logger.info("Discussion deleted", { discussionId, userId });
 
-  return { message: 'Discussion deleted successfully' };
+  return { message: "Discussion deleted successfully" };
 };
 
 export const voteDiscussion = async (discussionId, value, userId) => {
   const discussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!discussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
   const existingVote = await prisma.discussionVote.findUnique({
     where: {
       userId_discussionId: {
         userId,
-        discussionId
-      }
-    }
+        discussionId,
+      },
+    },
   });
 
   if (existingVote) {
@@ -301,133 +316,144 @@ export const voteDiscussion = async (discussionId, value, userId) => {
         where: {
           userId_discussionId: {
             userId,
-            discussionId
-          }
-        }
+            discussionId,
+          },
+        },
       });
 
-      const updateField = value === 1 ? 'upvotes' : 'downvotes';
+      const updateField = value === 1 ? "upvotes" : "downvotes";
       await prisma.discussion.update({
         where: { id: discussionId },
         data: {
-          [updateField]: { decrement: 1 }
-        }
+          [updateField]: { decrement: 1 },
+        },
       });
 
-      logger.info('Discussion vote removed', { discussionId, userId, value });
+      logger.info("Discussion vote removed", { discussionId, userId, value });
 
-      return { message: 'Vote removed', action: 'removed' };
+      return { message: "Vote removed", action: "removed" };
     }
 
     await prisma.discussionVote.update({
       where: {
         userId_discussionId: {
           userId,
-          discussionId
-        }
+          discussionId,
+        },
       },
-      data: { value }
+      data: { value },
     });
 
-    const oldUpdateField = existingVote.value === 1 ? 'upvotes' : 'downvotes';
-    const newUpdateField = value === 1 ? 'upvotes' : 'downvotes';
+    const oldUpdateField = existingVote.value === 1 ? "upvotes" : "downvotes";
+    const newUpdateField = value === 1 ? "upvotes" : "downvotes";
 
     await prisma.discussion.update({
       where: { id: discussionId },
       data: {
         [oldUpdateField]: { decrement: 1 },
-        [newUpdateField]: { increment: 1 }
-      }
+        [newUpdateField]: { increment: 1 },
+      },
     });
 
-    logger.info('Discussion vote changed', { discussionId, userId, oldValue: existingVote.value, newValue: value });
+    logger.info("Discussion vote changed", {
+      discussionId,
+      userId,
+      oldValue: existingVote.value,
+      newValue: value,
+    });
 
-    return { message: 'Vote changed', action: 'changed' };
+    return { message: "Vote changed", action: "changed" };
   }
 
   await prisma.discussionVote.create({
     data: {
       userId,
       discussionId,
-      value
-    }
+      value,
+    },
   });
 
-  const updateField = value === 1 ? 'upvotes' : 'downvotes';
+  const updateField = value === 1 ? "upvotes" : "downvotes";
   await prisma.discussion.update({
     where: { id: discussionId },
     data: {
-      [updateField]: { increment: 1 }
-    }
+      [updateField]: { increment: 1 },
+    },
   });
 
-  logger.info('Discussion vote added', { discussionId, userId, value });
+  logger.info("Discussion vote added", { discussionId, userId, value });
 
-  return { message: 'Vote added', action: 'added' };
+  return { message: "Vote added", action: "added" };
 };
 
 export const togglePinDiscussion = async (discussionId) => {
   const discussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!discussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
   const updated = await prisma.discussion.update({
     where: { id: discussionId },
-    data: { isPinned: !discussion.isPinned }
+    data: { isPinned: !discussion.isPinned },
   });
 
-  logger.info('Discussion pin toggled', { discussionId, isPinned: updated.isPinned });
+  logger.info("Discussion pin toggled", {
+    discussionId,
+    isPinned: updated.isPinned,
+  });
 
   return {
-    message: updated.isPinned ? 'Discussion pinned' : 'Discussion unpinned',
-    isPinned: updated.isPinned
+    message: updated.isPinned ? "Discussion pinned" : "Discussion unpinned",
+    isPinned: updated.isPinned,
   };
 };
 
 export const toggleLockDiscussion = async (discussionId) => {
   const discussion = await prisma.discussion.findUnique({
-    where: { 
+    where: {
       id: discussionId,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!discussion) {
-    throw new ApiError(404, 'Discussion not found');
+    throw new ApiError(404, "Discussion not found");
   }
 
   const updated = await prisma.discussion.update({
     where: { id: discussionId },
-    data: { isLocked: !discussion.isLocked }
+    data: { isLocked: !discussion.isLocked },
   });
 
-  logger.info('Discussion lock toggled', { discussionId, isLocked: updated.isLocked });
+  logger.info("Discussion lock toggled", {
+    discussionId,
+    isLocked: updated.isLocked,
+  });
 
   return {
-    message: updated.isLocked ? 'Discussion locked' : 'Discussion unlocked',
-    isLocked: updated.isLocked
+    message: updated.isLocked ? "Discussion locked" : "Discussion unlocked",
+    isLocked: updated.isLocked,
   };
 };
 
 export const getUserDiscussions = async (username, filters) => {
   const { page, limit } = filters;
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const { skip, limit: pageLimit } = sanitizePaginationParams(page, limit);
@@ -436,7 +462,7 @@ export const getUserDiscussions = async (username, filters) => {
     prisma.discussion.findMany({
       where: {
         userId: user.id,
-        deletedAt: null
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -450,32 +476,32 @@ export const getUserDiscussions = async (username, filters) => {
           select: {
             id: true,
             title: true,
-            slug: true
-          }
+            slug: true,
+          },
         },
         _count: {
           select: {
             comments: {
-              where: { deletedAt: null }
-            }
-          }
-        }
+              where: { deletedAt: null },
+            },
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
     prisma.discussion.count({
       where: {
         userId: user.id,
-        deletedAt: null
-      }
-    })
+        deletedAt: null,
+      },
+    }),
   ]);
 
-  const discussionsWithCount = discussions.map(d => ({
+  const discussionsWithCount = discussions.map((d) => ({
     ...d,
-    commentCount: d._count.comments
+    commentCount: d._count.comments,
   }));
 
   return createPaginatedResponse(discussionsWithCount, page, limit, total);

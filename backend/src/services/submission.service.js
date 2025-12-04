@@ -1,78 +1,93 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { executeCode, executeCodeWithTestCases } from './judge.service.js';
-import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
-import { updateUserStatsAfterSubmission } from './stats.service.js';
-import { checkBadgesAfterSubmission } from '../hooks/badge.hooks.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import { executeCode, executeCodeWithTestCases } from "./judge.service.js";
+import {
+  sanitizePaginationParams,
+  createPaginatedResponse,
+} from "../utils/pagination.utils.js";
+import { updateUserStatsAfterSubmission } from "./stats.service.js";
+import { checkBadgesAfterSubmission } from "../hooks/badge.hooks.js";
+import logger from "../utils/logger.js";
+import { addSubmissionJob } from "../jobs/submissionQueue.js";
 
-export const runCode = async (problemSlug, sourceCode, language, stdin, userId) => {
+export const runCode = async (
+  problemSlug,
+  sourceCode,
+  language,
+  stdin,
+  userId,
+) => {
   const problem = await prisma.problem.findUnique({
-    where: { 
+    where: {
       slug: problemSlug,
-      deletedAt: null 
+      deletedAt: null,
     },
     include: {
       testCases: {
         where: { isPublic: true },
-        orderBy: { order: 'asc' },
-        take: 3 
-      }
-    }
+        orderBy: { order: "asc" },
+        take: 3,
+      },
+    },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
 
   if (stdin) {
     const result = await executeCode(sourceCode, language, stdin);
     return {
-      type: 'custom_input',
-      result
+      type: "custom_input",
+      result,
     };
   }
 
   if (problem.testCases.length === 0) {
-    throw new ApiError(400, 'No public test cases available');
+    throw new ApiError(400, "No public test cases available");
   }
 
   const results = await executeCodeWithTestCases(
     sourceCode,
     language,
-    problem.testCases.map(tc => ({
+    problem.testCases.map((tc) => ({
       input: tc.input,
-      output: tc.output
-    }))
+      output: tc.output,
+    })),
   );
 
   return {
-    type: 'test_cases',
+    type: "test_cases",
     results,
     totalTests: results.length,
-    passedTests: results.filter(r => r.passed).length
+    passedTests: results.filter((r) => r.passed).length,
   };
 };
 
-export const submitSolution = async (problemSlug, sourceCode, language, userId) => {
+export const submitSolution = async (
+  problemSlug,
+  sourceCode,
+  language,
+  userId,
+) => {
   const problem = await prisma.problem.findUnique({
-    where: { 
+    where: {
       slug: problemSlug,
-      deletedAt: null 
+      deletedAt: null,
     },
     include: {
       testCases: {
-        orderBy: { order: 'asc' }
-      }
-    }
+        orderBy: { order: "asc" },
+      },
+    },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
 
-  if (problem.testCases.length === 0) {
-    throw new ApiError(400, 'No test cases available for this problem');
+  if (!problem.testCases.length) {
+    throw new ApiError(400, "No test cases available for this problem");
   }
 
   const submission = await prisma.submission.create({
@@ -81,140 +96,40 @@ export const submitSolution = async (problemSlug, sourceCode, language, userId) 
       problemId: problem.id,
       sourceCode,
       language,
-      status: 'PENDING',
+      status: "PENDING",
       passedTests: 0,
-      totalTests: problem.testCases.length
-    }
+      totalTests: problem.testCases.length,
+    },
   });
 
-  try {
-    const results = await executeCodeWithTestCases(
-      sourceCode,
-      language,
-      problem.testCases.map(tc => ({
-        input: tc.input,
-        output: tc.output
-      }))
-    );
+  await addSubmissionJob({
+    submissionId: submission.id,
+    userId,
+    problemId: problem.id,
+    language,
+    sourceCode,
+    testCases: problem.testCases.map((tc) => ({
+      id: tc.id,
+      input: tc.input,
+      expectedOutput: tc.output,
+    })),
+  });
 
-    await Promise.all(
-      results.map(result => 
-        prisma.testcaseResult.create({
-          data: {
-            submissionId: submission.id,
-            testcase: result.testcase,
-            passed: result.passed,
-            stdout: result.stdout,
-            stderr: result.stderr,
-            expectedOutput: result.expectedOutput,
-            actualOutput: result.actualOutput,
-            compileOutput: result.compile_output,
-            memory: result.memory?.toString(),
-            time: result.time?.toString(),
-            status: result.status
-          }
-        })
-      )
-    );
-    const passedCount = results.filter(r => r.passed).length;
-    const allPassed = passedCount === results.length;
-    
-    let finalStatus = 'ACCEPTED';
-    if (!allPassed) {
-      const firstFailed = results.find(r => !r.passed);
-      finalStatus = firstFailed.status;
-    }
-
-    const avgTime = results.reduce((sum, r) => sum + (parseFloat(r.time) || 0), 0) / results.length;
-    const avgMemory = results.reduce((sum, r) => sum + (parseInt(r.memory) || 0), 0) / results.length;
-
-    const updatedSubmission = await prisma.submission.update({
-      where: { id: submission.id },
-      data: {
-        status: finalStatus,
-        passedTests: passedCount,
-        time: avgTime.toFixed(3),
-        memory: Math.round(avgMemory).toString()
-      },
-      include: {
-        problem: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            difficulty: true
-          }
-        },
-        testcases: true
-      }
-    });
-
-    let newBadges = [];
-    if (allPassed) {
-      const isFirstSolve = await handleAcceptedSubmission(userId, problem.id, submission.id);
-      
-      try {
-        newBadges = await checkBadgesAfterSubmission(userId);
-        
-        if (newBadges.length > 0) {
-          logger.info('User earned new badges', {
-            userId,
-            submissionId: submission.id,
-            badgeCount: newBadges.length,
-            badges: newBadges.map(b => b.badge.name)
-          });
-        }
-      } catch (badgeError) {
-        logger.error('Failed to check badges after submission', {
-          error: badgeError.message,
-          userId,
-          submissionId: submission.id
-        });
-      }
-    }
-
-    await updateProblemStats(problem.id, allPassed);
-
-    logger.info('Submission processed', { 
-      submissionId: submission.id,
-      status: finalStatus,
-      passedTests: passedCount,
-      totalTests: results.length,
-      newBadgesEarned: newBadges.length
-    });
-
-    return {
-      submission: updatedSubmission,
-      newBadgesEarned: newBadges
-    };
-
-  } catch (error) {
-    await prisma.submission.update({
-      where: { id: submission.id },
-      data: {
-        status: 'INTERNAL_ERROR',
-        stderr: error.message
-      }
-    });
-
-    logger.error('Submission failed', { 
-      submissionId: submission.id,
-      error: error.message 
-    });
-
-    throw error;
-  }
+  return {
+    submissionId: submission.id,
+    status: "PENDING",
+    message: "Your submission is being processed",
+  };
 };
-
 async function handleAcceptedSubmission(userId, problemId, submissionId) {
   try {
     const existingSolve = await prisma.problemSolved.findUnique({
       where: {
         userId_problemId: {
           userId,
-          problemId
-        }
-      }
+          problemId,
+        },
+      },
     });
 
     let isFirstSolve = false;
@@ -225,8 +140,8 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
           userId,
           problemId,
           firstSolvedAt: new Date(),
-          totalAttempts: 1
-        }
+          totalAttempts: 1,
+        },
       });
       isFirstSolve = true;
     } else {
@@ -234,12 +149,12 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
         where: {
           userId_problemId: {
             userId,
-            problemId
-          }
+            problemId,
+          },
         },
         data: {
-          totalAttempts: { increment: 1 }
-        }
+          totalAttempts: { increment: 1 },
+        },
       });
     }
 
@@ -247,32 +162,31 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
       where: {
         userId_problemId: {
           userId,
-          problemId
-        }
+          problemId,
+        },
       },
       create: {
         userId,
         problemId,
         attempts: 1,
         solved: true,
-        lastAttemptAt: new Date()
+        lastAttemptAt: new Date(),
       },
       update: {
         attempts: { increment: 1 },
         solved: true,
-        lastAttemptAt: new Date()
-      }
+        lastAttemptAt: new Date(),
+      },
     });
 
     await updateUserStatsAfterSubmission(userId, problemId, true);
 
     return isFirstSolve;
-
   } catch (error) {
-    logger.error('Failed to handle accepted submission', { 
+    logger.error("Failed to handle accepted submission", {
       error: error.message,
       userId,
-      problemId 
+      problemId,
     });
     return false;
   }
@@ -281,7 +195,7 @@ async function handleAcceptedSubmission(userId, problemId, submissionId) {
 async function updateProblemStats(problemId, isAccepted) {
   try {
     const updateData = {
-      totalSubmissions: { increment: 1 }
+      totalSubmissions: { increment: 1 },
     };
 
     if (isAccepted) {
@@ -290,40 +204,41 @@ async function updateProblemStats(problemId, isAccepted) {
 
     await prisma.problem.update({
       where: { id: problemId },
-      data: updateData
+      data: updateData,
     });
 
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
       select: {
         totalSubmissions: true,
-        totalAccepted: true
-      }
+        totalAccepted: true,
+      },
     });
 
     if (problem.totalSubmissions > 0) {
-      const acceptanceRate = (problem.totalAccepted / problem.totalSubmissions) * 100;
-      
+      const acceptanceRate =
+        (problem.totalAccepted / problem.totalSubmissions) * 100;
+
       await prisma.problem.update({
         where: { id: problemId },
         data: {
-          acceptanceRate: parseFloat(acceptanceRate.toFixed(2))
-        }
+          acceptanceRate: parseFloat(acceptanceRate.toFixed(2)),
+        },
       });
     }
   } catch (error) {
-    logger.error('Failed to update problem stats', { 
+    logger.error("Failed to update problem stats", {
       error: error.message,
-      problemId 
+      problemId,
     });
   }
 }
 
 export const getSubmissionById = async (submissionId, userId) => {
   const submission = await prisma.submission.findUnique({
-    where: { 
+    where: {
       id: submissionId,
-      deletedAt: null 
+      deletedAt: null,
     },
     include: {
       problem: {
@@ -331,29 +246,32 @@ export const getSubmissionById = async (submissionId, userId) => {
           id: true,
           title: true,
           slug: true,
-          difficulty: true
-        }
+          difficulty: true,
+        },
       },
       user: {
         select: {
           id: true,
           fullName: true,
           username: true,
-          avatar: true
-        }
+          avatar: true,
+        },
       },
       testcases: {
-        orderBy: { testcase: 'asc' }
-      }
-    }
+        orderBy: { testcase: "asc" },
+      },
+    },
   });
 
   if (!submission) {
-    throw new ApiError(404, 'Submission not found');
+    throw new ApiError(404, "Submission not found");
   }
 
   if (submission.userId !== userId && !submission.isPublic) {
-    throw new ApiError(403, 'You do not have permission to view this submission');
+    throw new ApiError(
+      403,
+      "You do not have permission to view this submission",
+    );
   }
 
   return submission;
@@ -368,7 +286,7 @@ export const getUserSubmissions = async (userId, filters) => {
     deletedAt: null,
     ...(status && { status }),
     ...(language && { language }),
-    ...(problemId && { problemId })
+    ...(problemId && { problemId }),
   };
 
   const [submissions, total] = await Promise.all([
@@ -388,15 +306,15 @@ export const getUserSubmissions = async (userId, filters) => {
             id: true,
             title: true,
             slug: true,
-            difficulty: true
-          }
-        }
+            difficulty: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.submission.count({ where })
+    prisma.submission.count({ where }),
   ]);
 
   return createPaginatedResponse(submissions, page, limit, total);
@@ -405,11 +323,11 @@ export const getUserSubmissions = async (userId, filters) => {
 export const getProblemSubmissions = async (problemSlug, userId, filters) => {
   const problem = await prisma.problem.findUnique({
     where: { slug: problemSlug },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!problem) {
-    throw new ApiError(404, 'Problem not found');
+    throw new ApiError(404, "Problem not found");
   }
 
   const { page, limit, status } = filters;
@@ -419,7 +337,7 @@ export const getProblemSubmissions = async (problemSlug, userId, filters) => {
     problemId: problem.id,
     userId,
     deletedAt: null,
-    ...(status && { status })
+    ...(status && { status }),
   };
 
   const [submissions, total] = await Promise.all([
@@ -433,13 +351,13 @@ export const getProblemSubmissions = async (problemSlug, userId, filters) => {
         memory: true,
         passedTests: true,
         totalTests: true,
-        createdAt: true
+        createdAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.submission.count({ where })
+    prisma.submission.count({ where }),
   ]);
 
   return createPaginatedResponse(submissions, page, limit, total);

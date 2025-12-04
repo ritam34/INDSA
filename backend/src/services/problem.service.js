@@ -97,7 +97,7 @@ export const createProblem = async (problemData, userId) => {
     isPublic = false,
     isPremium = false,
     status = "DRAFT",
-    validateTests = true
+    validateTests = true,
   } = problemData;
 
   if (!title) {
@@ -116,17 +116,14 @@ export const createProblem = async (problemData, userId) => {
 
   if (Array.isArray(referenceSolutions)) {
     normalizedReferenceSolutions = referenceSolutions;
-  } else if (
-    referenceSolutions &&
-    typeof referenceSolutions === "object"
-  ) {
+  } else if (referenceSolutions && typeof referenceSolutions === "object") {
     normalizedReferenceSolutions = Object.entries(referenceSolutions).map(
       ([language, code]) => ({
         language,
         code,
         explanation: null,
         complexity: null,
-      })
+      }),
     );
   }
 
@@ -157,7 +154,7 @@ export const createProblem = async (problemData, userId) => {
     const validation = await validateProblemTestCases(
       { id: "new", title },
       normalizedReferenceSolutions,
-      testCases
+      testCases,
     );
 
     if (!validation.valid) {
@@ -416,23 +413,29 @@ export const updateProblem = async (problemId, updateData, userId) => {
   }
 
   if (updateData.testCases || updateData.referenceSolutions) {
-    const testCasesToValidate = updateData.testCases || existingProblem.testCases;
-    const refSolutions = updateData.referenceSolutions || existingProblem.referenceSolutions;
+    const testCasesToValidate =
+      updateData.testCases || existingProblem.testCases;
+    const refSolutions =
+      updateData.referenceSolutions || existingProblem.referenceSolutions;
 
     if (refSolutions && refSolutions.length > 0) {
-      logger.info('Validating updated test cases...', { problemId });
-      
+      logger.info("Validating updated test cases...", { problemId });
+
       const validation = await validateProblemTestCases(
         existingProblem,
         refSolutions,
-        testCasesToValidate
+        testCasesToValidate,
       );
 
       if (!validation.valid) {
-        throw new ApiError(400, 'Test case validation failed', validation.errors);
+        throw new ApiError(
+          400,
+          "Test case validation failed",
+          validation.errors,
+        );
       }
 
-      logger.info('✅ Updated test cases validated successfully', { problemId });
+      logger.info("Updated test cases validated successfully", { problemId });
     }
   }
 
@@ -569,7 +572,6 @@ export const addCodeSnippet = async (problemId, snippetData, userId) => {
     return updated;
   }
 
-  // Create new
   const snippet = await prisma.codeSnippet.create({
     data: {
       ...snippetData,

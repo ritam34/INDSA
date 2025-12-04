@@ -1,14 +1,17 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { hashPassword, comparePassword } from '../utils/password.utils.js';
-import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import { hashPassword, comparePassword } from "../utils/password.utils.js";
+import {
+  sanitizePaginationParams,
+  createPaginatedResponse,
+} from "../utils/pagination.utils.js";
+import logger from "../utils/logger.js";
 
 export const getUserProfile = async (username, currentUserId = null) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -36,30 +39,32 @@ export const getUserProfile = async (username, currentUserId = null) => {
           globalRanking: true,
           reputation: true,
           contestRating: true,
-          contestsParticipated: true
-        }
-      }
-    }
+          contestsParticipated: true,
+        },
+      },
+    },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
-  const totalSolved = user.stats 
-    ? user.stats.easyProblemsSolved + user.stats.mediumProblemsSolved + user.stats.hardProblemsSolved
+  const totalSolved = user.stats
+    ? user.stats.easyProblemsSolved +
+      user.stats.mediumProblemsSolved +
+      user.stats.hardProblemsSolved
     : 0;
 
   return {
     ...user,
-    totalProblemsSolved: totalSolved
+    totalProblemsSolved: totalSolved,
   };
 };
 
 export const getCurrentUser = async (userId) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       id: userId,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -77,12 +82,12 @@ export const getCurrentUser = async (userId) => {
       isPremium: true,
       premiumExpiresAt: true,
       createdAt: true,
-      stats: true
-    }
+      stats: true,
+    },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   return user;
@@ -96,12 +101,12 @@ export const updateProfile = async (userId, updateData) => {
       where: {
         username,
         id: { not: userId },
-        deletedAt: null
-      }
+        deletedAt: null,
+      },
     });
 
     if (existingUser) {
-      throw new ApiError(409, 'Username already taken');
+      throw new ApiError(409, "Username already taken");
     }
   }
 
@@ -109,7 +114,7 @@ export const updateProfile = async (userId, updateData) => {
     where: { id: userId },
     data: {
       ...(username && { username }),
-      ...otherData
+      ...otherData,
     },
     select: {
       id: true,
@@ -124,44 +129,47 @@ export const updateProfile = async (userId, updateData) => {
       linkedin: true,
       role: true,
       isPremium: true,
-      updatedAt: true
-    }
+      updatedAt: true,
+    },
   });
 
-  logger.info('User profile updated', { userId, fields: Object.keys(updateData) });
+  logger.info("User profile updated", {
+    userId,
+    fields: Object.keys(updateData),
+  });
 
   return updatedUser;
 };
 
 export const changePassword = async (userId, currentPassword, newPassword) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       id: userId,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
-      password: true
-    }
+      password: true,
+    },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const isPasswordValid = await comparePassword(currentPassword, user.password);
   if (!isPasswordValid) {
-    throw new ApiError(401, 'Current password is incorrect');
+    throw new ApiError(401, "Current password is incorrect");
   }
   const hashedPassword = await hashPassword(newPassword);
   await prisma.user.update({
     where: { id: userId },
-    data: { password: hashedPassword }
+    data: { password: hashedPassword },
   });
 
-  logger.info('User password changed', { userId });
+  logger.info("User password changed", { userId });
 
-  return { message: 'Password changed successfully' };
+  return { message: "Password changed successfully" };
 };
 
 export const deleteAccount = async (userId) => {
@@ -171,36 +179,36 @@ export const deleteAccount = async (userId) => {
       deletedAt: new Date(),
       refreshToken: null,
       emailVerificationToken: null,
-      forgotPasswordToken: null
-    }
+      forgotPasswordToken: null,
+    },
   });
 
-  logger.info('User account deleted (soft delete)', { userId });
+  logger.info("User account deleted (soft delete)", { userId });
 
-  return { message: 'Account deleted successfully' };
+  return { message: "Account deleted successfully" };
 };
 
 export const getUserStats = async (username) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
       username: true,
-      stats: true
-    }
+      stats: true,
+    },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const recentSubmissions = await prisma.submission.findMany({
     where: {
       userId: user.id,
-      deletedAt: null
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -212,19 +220,18 @@ export const getUserStats = async (username) => {
           id: true,
           title: true,
           slug: true,
-          difficulty: true
-        }
-      }
+          difficulty: true,
+        },
+      },
     },
-    orderBy: { createdAt: 'desc' },
-    take: 10
+    orderBy: { createdAt: "desc" },
+    take: 10,
   });
 
-  // Get solved problems by difficulty
   const solvedProblems = await prisma.problemSolved.findMany({
     where: {
       userId: user.id,
-      deletedAt: null
+      deletedAt: null,
     },
     include: {
       problem: {
@@ -232,21 +239,19 @@ export const getUserStats = async (username) => {
           id: true,
           title: true,
           slug: true,
-          difficulty: true
-        }
-      }
+          difficulty: true,
+        },
+      },
     },
-    orderBy: { firstSolvedAt: 'desc' }
+    orderBy: { firstSolvedAt: "desc" },
   });
 
-  // Group by difficulty
   const solvedByDifficulty = {
-    EASY: solvedProblems.filter(p => p.problem.difficulty === 'EASY'),
-    MEDIUM: solvedProblems.filter(p => p.problem.difficulty === 'MEDIUM'),
-    HARD: solvedProblems.filter(p => p.problem.difficulty === 'HARD')
+    EASY: solvedProblems.filter((p) => p.problem.difficulty === "EASY"),
+    MEDIUM: solvedProblems.filter((p) => p.problem.difficulty === "MEDIUM"),
+    HARD: solvedProblems.filter((p) => p.problem.difficulty === "HARD"),
   };
 
-  // Get activity heatmap (last 365 days)
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
@@ -254,17 +259,16 @@ export const getUserStats = async (username) => {
     where: {
       userId: user.id,
       createdAt: { gte: oneYearAgo },
-      deletedAt: null
+      deletedAt: null,
     },
     select: {
-      createdAt: true
-    }
+      createdAt: true,
+    },
   });
 
-  // Create heatmap data
   const heatmapData = {};
-  submissions.forEach(sub => {
-    const date = sub.createdAt.toISOString().split('T')[0];
+  submissions.forEach((sub) => {
+    const date = sub.createdAt.toISOString().split("T")[0];
     heatmapData[date] = (heatmapData[date] || 0) + 1;
   });
 
@@ -275,23 +279,23 @@ export const getUserStats = async (username) => {
       easy: solvedByDifficulty.EASY.length,
       medium: solvedByDifficulty.MEDIUM.length,
       hard: solvedByDifficulty.HARD.length,
-      total: solvedProblems.length
+      total: solvedProblems.length,
     },
-    heatmapData
+    heatmapData,
   };
 };
 
 export const getUserSubmissions = async (username, page, limit) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const { skip, limit: pageLimit } = sanitizePaginationParams(page, limit);
@@ -300,7 +304,7 @@ export const getUserSubmissions = async (username, page, limit) => {
     prisma.submission.findMany({
       where: {
         userId: user.id,
-        deletedAt: null
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -314,36 +318,41 @@ export const getUserSubmissions = async (username, page, limit) => {
             id: true,
             title: true,
             slug: true,
-            difficulty: true
-          }
-        }
+            difficulty: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
     prisma.submission.count({
       where: {
         userId: user.id,
-        deletedAt: null
-      }
-    })
+        deletedAt: null,
+      },
+    }),
   ]);
 
   return createPaginatedResponse(submissions, page, limit, total);
 };
 
-export const getUserSolvedProblems = async (username, page, limit, difficulty = null) => {
+export const getUserSolvedProblems = async (
+  username,
+  page,
+  limit,
+  difficulty = null,
+) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const { skip, limit: pageLimit } = sanitizePaginationParams(page, limit);
@@ -353,9 +362,9 @@ export const getUserSolvedProblems = async (username, page, limit, difficulty = 
     deletedAt: null,
     ...(difficulty && {
       problem: {
-        difficulty: difficulty.toUpperCase()
-      }
-    })
+        difficulty: difficulty.toUpperCase(),
+      },
+    }),
   };
 
   const [solvedProblems, total] = await Promise.all([
@@ -374,15 +383,15 @@ export const getUserSolvedProblems = async (username, page, limit, difficulty = 
             slug: true,
             difficulty: true,
             tags: true,
-            acceptanceRate: true
-          }
-        }
+            acceptanceRate: true,
+          },
+        },
       },
-      orderBy: { firstSolvedAt: 'desc' },
+      orderBy: { firstSolvedAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.problemSolved.count({ where })
+    prisma.problemSolved.count({ where }),
   ]);
 
   return createPaginatedResponse(solvedProblems, page, limit, total);
@@ -396,17 +405,17 @@ export const getAllUsers = async (filters) => {
     deletedAt: null,
     ...(search && {
       OR: [
-        { fullName: { contains: search, mode: 'insensitive' } },
-        { username: { contains: search, mode: 'insensitive' } }
-      ]
-    })
+        { fullName: { contains: search, mode: "insensitive" } },
+        { username: { contains: search, mode: "insensitive" } },
+      ],
+    }),
   };
 
   const orderByMap = {
     reputation: { stats: { reputation: order } },
     problems_solved: { stats: { easyProblemsSolved: order } },
     created_at: { createdAt: order },
-    contest_rating: { stats: { contestRating: order } }
+    contest_rating: { stats: { contestRating: order } },
   };
 
   const [users, total] = await Promise.all([
@@ -428,22 +437,24 @@ export const getAllUsers = async (filters) => {
             hardProblemsSolved: true,
             reputation: true,
             contestRating: true,
-            globalRanking: true
-          }
-        }
+            globalRanking: true,
+          },
+        },
       },
-      orderBy: orderByMap[sortBy] || { createdAt: 'desc' },
+      orderBy: orderByMap[sortBy] || { createdAt: "desc" },
       skip,
-      take: pageLimit
+      take: pageLimit,
     }),
-    prisma.user.count({ where })
+    prisma.user.count({ where }),
   ]);
 
-  const usersWithTotal = users.map(user => ({
+  const usersWithTotal = users.map((user) => ({
     ...user,
-    totalProblemsSolved: user.stats 
-      ? user.stats.easyProblemsSolved + user.stats.mediumProblemsSolved + user.stats.hardProblemsSolved
-      : 0
+    totalProblemsSolved: user.stats
+      ? user.stats.easyProblemsSolved +
+        user.stats.mediumProblemsSolved +
+        user.stats.hardProblemsSolved
+      : 0,
   }));
 
   return createPaginatedResponse(usersWithTotal, page, limit, total);
@@ -451,15 +462,15 @@ export const getAllUsers = async (filters) => {
 
 export const getUserBadges = async (username) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       username,
-      deletedAt: null 
+      deletedAt: null,
     },
-    select: { id: true }
+    select: { id: true },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   const badges = await prisma.userBadge.findMany({
@@ -468,21 +479,21 @@ export const getUserBadges = async (username) => {
       badge: {
         select: {
           id: true,
-          fullName: true,
+          name: true,
           slug: true,
           description: true,
           icon: true,
           type: true,
           rarity: true,
-          points: true
-        }
-      }
+          points: true,
+        },
+      },
     },
-    orderBy: { earnedAt: 'desc' }
+    orderBy: { earnedAt: "desc" },
   });
 
-  return badges.map(ub => ({
+  return badges.map((ub) => ({
     ...ub.badge,
-    earnedAt: ub.earnedAt
+    earnedAt: ub.earnedAt,
   }));
 };

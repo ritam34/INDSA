@@ -1,7 +1,10 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { sanitizePaginationParams, createPaginatedResponse } from '../utils/pagination.utils.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import {
+  sanitizePaginationParams,
+  createPaginatedResponse,
+} from "../utils/pagination.utils.js";
+import logger from "../utils/logger.js";
 
 class NotificationService {
   async createNotification(data) {
@@ -14,21 +17,21 @@ class NotificationService {
           message: data.message,
           data: data.data || null,
           link: data.link || null,
-          isRead: false
-        }
+          isRead: false,
+        },
       });
 
-      logger.info('Notification created', {
+      logger.info("Notification created", {
         notificationId: notification.id,
         userId: data.userId,
-        type: data.type
+        type: data.type,
       });
 
       return notification;
     } catch (error) {
-      logger.error('Failed to create notification', {
+      logger.error("Failed to create notification", {
         error: error.message,
-        data
+        data,
       });
       throw error;
     }
@@ -37,28 +40,28 @@ class NotificationService {
   async createBadgeNotification(userId, badge) {
     return this.createNotification({
       userId,
-      type: 'ACHIEVEMENT',
-      title: 'New Badge Earned!',
+      type: "ACHIEVEMENT",
+      title: "New Badge Earned!",
       message: `Congratulations! You've earned the "${badge.name}" badge!`,
       data: {
         badgeId: badge.id,
         badgeName: badge.name,
         badgeIcon: badge.icon,
         badgeRarity: badge.rarity,
-        badgePoints: badge.points
+        badgePoints: badge.points,
       },
-      link: `/badges/${badge.slug}`
+      link: `/badges/${badge.slug}`,
     });
   }
 
   async createSubmissionNotification(userId, submission, problem) {
-    const isAccepted = submission.status === 'ACCEPTED';
-    
+    const isAccepted = submission.status === "ACCEPTED";
+
     return this.createNotification({
       userId,
-      type: 'SUBMISSION',
-      title: isAccepted ? 'Solution Accepted!' : 'Submission Failed',
-      message: isAccepted 
+      type: "SUBMISSION",
+      title: isAccepted ? "Solution Accepted!" : "Submission Failed",
+      message: isAccepted
         ? `Your solution to "${problem.title}" was accepted!`
         : `Your solution to "${problem.title}" failed with status: ${submission.status}`,
       data: {
@@ -67,115 +70,125 @@ class NotificationService {
         problemSlug: problem.slug,
         status: submission.status,
         passedTests: submission.passedTests,
-        totalTests: submission.totalTests
+        totalTests: submission.totalTests,
       },
-      link: `/submissions/${submission.id}`
+      link: `/submissions/${submission.id}`,
     });
   }
 
-  async createDiscussionReplyNotification(authorId, discussion, comment, replierUsername) {
+  async createDiscussionReplyNotification(
+    authorId,
+    discussion,
+    comment,
+    replierUsername,
+  ) {
     return this.createNotification({
       userId: authorId,
-      type: 'DISCUSSION',
-      title: 'New Reply to Your Discussion',
+      type: "DISCUSSION",
+      title: "New Reply to Your Discussion",
       message: `${replierUsername} replied to your discussion: "${discussion.title}"`,
       data: {
         discussionId: discussion.id,
         commentId: comment.id,
-        replierUsername
+        replierUsername,
       },
-      link: `/problems/${discussion.problem.slug}/discussions/${discussion.id}`
+      link: `/problems/${discussion.problem.slug}/discussions/${discussion.id}`,
     });
   }
 
-  async createCommentReplyNotification(authorId, comment, reply, replierUsername) {
+  async createCommentReplyNotification(
+    authorId,
+    comment,
+    reply,
+    replierUsername,
+  ) {
     return this.createNotification({
       userId: authorId,
-      type: 'COMMENT',
-      title: 'New Reply to Your Comment',
+      type: "COMMENT",
+      title: "New Reply to Your Comment",
       message: `${replierUsername} replied to your comment`,
       data: {
         commentId: comment.id,
         replyId: reply.id,
-        replierUsername
+        replierUsername,
       },
-      link: `/discussions/${comment.discussionId}#comment-${reply.id}`
+      link: `/discussions/${comment.discussionId}#comment-${reply.id}`,
     });
   }
 
-  async createContestNotification(userId, contest, type = 'STARTING') {
+  async createContestNotification(userId, contest, type = "STARTING") {
     const messages = {
       STARTING: {
-        title: 'Contest Starting Soon!',
-        message: `Contest "${contest.title}" starts in 1 hour!`
+        title: "Contest Starting Soon!",
+        message: `Contest "${contest.title}" starts in 1 hour!`,
       },
       STARTED: {
-        title: 'Contest Started!',
-        message: `Contest "${contest.title}" has started. Good luck!`
+        title: "Contest Started!",
+        message: `Contest "${contest.title}" has started. Good luck!`,
       },
       ENDING: {
-        title: 'Contest Ending Soon!',
-        message: `Contest "${contest.title}" ends in 15 minutes!`
+        title: "Contest Ending Soon!",
+        message: `Contest "${contest.title}" ends in 15 minutes!`,
       },
       ENDED: {
-        title: 'Contest Ended!',
-        message: `Contest "${contest.title}" has ended. Check your ranking!`
-      }
+        title: "Contest Ended!",
+        message: `Contest "${contest.title}" has ended. Check your ranking!`,
+      },
     };
 
     const config = messages[type] || messages.STARTING;
 
     return this.createNotification({
       userId,
-      type: 'CONTEST',
+      type: "CONTEST",
       title: config.title,
       message: config.message,
       data: {
         contestId: contest.id,
         contestSlug: contest.slug,
-        contestType: type
+        contestType: type,
       },
-      link: `/contests/${contest.slug}`
+      link: `/contests/${contest.slug}`,
     });
   }
 
   async createSystemNotification(userId, title, message, data = null) {
     return this.createNotification({
       userId,
-      type: 'SYSTEM',
+      type: "SYSTEM",
       title,
       message,
       data,
-      link: null
+      link: null,
     });
   }
 
   async bulkCreateNotifications(userIds, notificationData) {
     try {
-      const notifications = userIds.map(userId => ({
+      const notifications = userIds.map((userId) => ({
         userId,
         type: notificationData.type,
         title: notificationData.title,
         message: notificationData.message,
         data: notificationData.data || null,
         link: notificationData.link || null,
-        isRead: false
+        isRead: false,
       }));
 
       const created = await prisma.notification.createMany({
-        data: notifications
+        data: notifications,
       });
 
-      logger.info('Bulk notifications created', {
+      logger.info("Bulk notifications created", {
         count: created.count,
-        type: notificationData.type
+        type: notificationData.type,
       });
 
       return created;
     } catch (error) {
-      logger.error('Failed to create bulk notifications', {
+      logger.error("Failed to create bulk notifications", {
         error: error.message,
-        userCount: userIds.length
+        userCount: userIds.length,
       });
       throw error;
     }
@@ -187,29 +200,29 @@ class NotificationService {
 
     const where = {
       userId,
-      ...(isRead !== undefined && { isRead: isRead === 'true' }),
-      ...(type && { type })
+      ...(isRead !== undefined && { isRead: isRead === "true" }),
+      ...(type && { type }),
     };
 
     const [notifications, total, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
-        take: pageLimit
+        take: pageLimit,
       }),
       prisma.notification.count({ where }),
       prisma.notification.count({
         where: {
           userId,
-          isRead: false
-        }
-      })
+          isRead: false,
+        },
+      }),
     ]);
 
     return {
       ...createPaginatedResponse(notifications, page, limit, total),
-      unreadCount
+      unreadCount,
     };
   }
 
@@ -217,8 +230,8 @@ class NotificationService {
     const count = await prisma.notification.count({
       where: {
         userId,
-        isRead: false
-      }
+        isRead: false,
+      },
     });
 
     return count;
@@ -226,15 +239,18 @@ class NotificationService {
 
   async markAsRead(notificationId, userId) {
     const notification = await prisma.notification.findUnique({
-      where: { id: notificationId }
+      where: { id: notificationId },
     });
 
     if (!notification) {
-      throw new ApiError(404, 'Notification not found');
+      throw new ApiError(404, "Notification not found");
     }
 
     if (notification.userId !== userId) {
-      throw new ApiError(403, 'You do not have permission to update this notification');
+      throw new ApiError(
+        403,
+        "You do not have permission to update this notification",
+      );
     }
 
     if (notification.isRead) {
@@ -243,7 +259,7 @@ class NotificationService {
 
     const updated = await prisma.notification.update({
       where: { id: notificationId },
-      data: { isRead: true }
+      data: { isRead: true },
     });
 
     return updated;
@@ -253,16 +269,16 @@ class NotificationService {
     const result = await prisma.notification.updateMany({
       where: {
         userId,
-        isRead: false
+        isRead: false,
       },
       data: {
-        isRead: true
-      }
+        isRead: true,
+      },
     });
 
-    logger.info('Marked all notifications as read', {
+    logger.info("Marked all notifications as read", {
       userId,
-      count: result.count
+      count: result.count,
     });
 
     return result;
@@ -270,35 +286,38 @@ class NotificationService {
 
   async deleteNotification(notificationId, userId) {
     const notification = await prisma.notification.findUnique({
-      where: { id: notificationId }
+      where: { id: notificationId },
     });
 
     if (!notification) {
-      throw new ApiError(404, 'Notification not found');
+      throw new ApiError(404, "Notification not found");
     }
 
     if (notification.userId !== userId) {
-      throw new ApiError(403, 'You do not have permission to delete this notification');
+      throw new ApiError(
+        403,
+        "You do not have permission to delete this notification",
+      );
     }
 
     await prisma.notification.delete({
-      where: { id: notificationId }
+      where: { id: notificationId },
     });
 
-    return { message: 'Notification deleted successfully' };
+    return { message: "Notification deleted successfully" };
   }
 
   async deleteReadNotifications(userId) {
     const result = await prisma.notification.deleteMany({
       where: {
         userId,
-        isRead: true
-      }
+        isRead: true,
+      },
     });
 
-    logger.info('Deleted read notifications', {
+    logger.info("Deleted read notifications", {
       userId,
-      count: result.count
+      count: result.count,
     });
 
     return result;
@@ -306,7 +325,7 @@ class NotificationService {
 
   async getNotificationSettings(userId) {
     let settings = await prisma.notificationSetting.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!settings) {
@@ -325,8 +344,8 @@ class NotificationService {
           pushOnContest: true,
           pushOnAchievement: true,
           weeklyDigest: true,
-          marketingEmails: false
-        }
+          marketingEmails: false,
+        },
       });
     }
 
@@ -339,13 +358,13 @@ class NotificationService {
       update: updates,
       create: {
         userId,
-        ...updates
-      }
+        ...updates,
+      },
     });
 
-    logger.info('Notification settings updated', {
+    logger.info("Notification settings updated", {
       userId,
-      updates: Object.keys(updates)
+      updates: Object.keys(updates),
     });
 
     return settings;
@@ -353,14 +372,14 @@ class NotificationService {
 
   async isNotificationEnabled(userId, notificationType) {
     const settings = await this.getNotificationSettings(userId);
-    
+
     const typeMap = {
-      'SUBMISSION': 'emailOnSubmission',
-      'DISCUSSION': 'emailOnDiscussionReply',
-      'COMMENT': 'emailOnCommentReply',
-      'CONTEST': 'emailOnContest',
-      'ACHIEVEMENT': 'emailOnAchievement',
-      'SYSTEM': 'emailOnSystemUpdate'
+      SUBMISSION: "emailOnSubmission",
+      DISCUSSION: "emailOnDiscussionReply",
+      COMMENT: "emailOnCommentReply",
+      CONTEST: "emailOnContest",
+      ACHIEVEMENT: "emailOnAchievement",
+      SYSTEM: "emailOnSystemUpdate",
     };
 
     const settingKey = typeMap[notificationType];
@@ -374,15 +393,15 @@ class NotificationService {
     const result = await prisma.notification.deleteMany({
       where: {
         createdAt: {
-          lt: thirtyDaysAgo
+          lt: thirtyDaysAgo,
         },
-        isRead: true
-      }
+        isRead: true,
+      },
     });
 
-    logger.info('Cleaned up old notifications', {
+    logger.info("Cleaned up old notifications", {
       count: result.count,
-      olderThan: thirtyDaysAgo
+      olderThan: thirtyDaysAgo,
     });
 
     return result;

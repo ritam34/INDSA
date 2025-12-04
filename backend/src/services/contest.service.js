@@ -6,6 +6,7 @@ import {
   createPaginatedResponse,
 } from "../utils/pagination.utils.js";
 import logger from "../utils/logger.js";
+import { sendContestReminderEmail } from "../jobs/emailQueue.js";
 
 export const createContest = async (contestData, userId) => {
   const {
@@ -484,4 +485,17 @@ export const isContestActive = async (contestId) => {
 
   const now = new Date();
   return now >= contest.startTime && now < contest.endTime;
+};
+export const sendContestReminders = async (contestId) => {
+  const participants = await prisma.contestParticipant.findMany({
+    where: { contestId },
+    include: {
+      user: true,
+      contest: true,
+    },
+  });
+
+  for (const participant of participants) {
+    await sendContestReminderEmail(participant.user, participant.contest);
+  }
 };

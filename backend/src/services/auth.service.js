@@ -1,40 +1,37 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { hashPassword, comparePassword } from '../utils/password.utils.js';
-import { 
-  generateAccessToken, 
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import { hashPassword, comparePassword } from "../utils/password.utils.js";
+import {
+  generateAccessToken,
   generateRefreshToken,
   generateEmailVerificationToken,
   generatePasswordResetToken,
-  verifyRefreshToken
-} from '../utils/jwt.utils.js';
-import { 
-  sendVerificationEmail, 
+  verifyRefreshToken,
+} from "../utils/jwt.utils.js";
+import {
+  sendVerificationEmail,
   sendPasswordResetEmail,
-  sendWelcomeEmail 
-} from './email.service.js';
-import crypto from 'crypto';
-import logger from '../utils/logger.js';
+} from "./email.service.js";
+import crypto from "crypto";
+import { sendWelcomeEmail } from "../jobs/emailQueue.js";
+import logger from "../utils/logger.js";
 
 export const signup = async (userData) => {
   const { fullName, username, email, password } = userData;
 
   const existingUser = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email },
-        { username }
-      ],
-      deletedAt: null
-    }
+      OR: [{ email }, { username }],
+      deletedAt: null,
+    },
   });
 
   if (existingUser) {
     if (existingUser.email === email) {
-      throw new ApiError(409, 'Email already registered');
+      throw new ApiError(409, "Email already registered");
     }
     if (existingUser.username === username) {
-      throw new ApiError(409, 'Username already taken');
+      throw new ApiError(409, "Username already taken");
     }
   }
 
@@ -52,8 +49,8 @@ export const signup = async (userData) => {
       emailVerificationToken: verificationToken,
       emailVerificationTokenExpiry: verificationTokenExpiry,
       stats: {
-        create: {} 
-      }
+        create: {},
+      },
     },
     select: {
       id: true,
@@ -63,19 +60,20 @@ export const signup = async (userData) => {
       avatar: true,
       role: true,
       isEmailVerified: true,
-      createdAt: true
-    }
+      createdAt: true,
+    },
   });
 
-  sendVerificationEmail(email, fullName, verificationToken).catch(err => {
-    logger.error('Failed to send verification email', { error: err.message });
+  sendVerificationEmail(email, fullName, verificationToken).catch((err) => {
+    logger.error("Failed to send verification email", { error: err.message });
   });
 
-  logger.info('User signed up', { userId: user.id, email });
+  logger.info("User signed up", { userId: user.id, email });
 
   return {
     user,
-    message: 'Signup successful! Please check your email to verify your account.'
+    message:
+      "Signup successful! Please check your email to verify your account.",
   };
 };
 
@@ -83,9 +81,9 @@ export const login = async (credentials) => {
   const { email, password } = credentials;
 
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       email,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -96,27 +94,27 @@ export const login = async (credentials) => {
       avatar: true,
       role: true,
       isEmailVerified: true,
-      isPremium: true
-    }
+      isPremium: true,
+    },
   });
 
   if (!user) {
-    throw new ApiError(401, 'Invalid email or password');
+    throw new ApiError(401, "Invalid email or password");
   }
 
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
-    throw new ApiError(401, 'Invalid email or password');
+    throw new ApiError(401, "Invalid email or password");
   }
 
-  const accessToken = generateAccessToken({ 
-    id: user.id, 
+  const accessToken = generateAccessToken({
+    id: user.id,
     email: user.email,
-    role: user.role 
+    role: user.role,
   });
-  
-  const refreshToken = generateRefreshToken({ 
-    id: user.id 
+
+  const refreshToken = generateRefreshToken({
+    id: user.id,
   });
 
   const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -124,83 +122,83 @@ export const login = async (credentials) => {
     where: { id: user.id },
     data: {
       refreshToken,
-      refreshTokenExpiry
-    }
+      refreshTokenExpiry,
+    },
   });
 
   const { password: _, ...userWithoutPassword } = user;
 
-  logger.info('User logged in', { userId: user.id, email });
+  logger.info("User logged in", { userId: user.id, email });
 
   return {
     user: userWithoutPassword,
     accessToken,
-    refreshToken
+    refreshToken,
   };
 };
 
 export const refreshAccessToken = async (refreshToken) => {
   if (!refreshToken) {
-    throw new ApiError(401, 'Refresh token required');
+    throw new ApiError(401, "Refresh token required");
   }
 
   const decoded = verifyRefreshToken(refreshToken);
 
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       id: decoded.id,
-      deletedAt: null 
+      deletedAt: null,
     },
     select: {
       id: true,
       email: true,
       role: true,
       refreshToken: true,
-      refreshTokenExpiry: true
-    }
+      refreshTokenExpiry: true,
+    },
   });
 
   if (!user || user.refreshToken !== refreshToken) {
-    throw new ApiError(401, 'Invalid refresh token');
+    throw new ApiError(401, "Invalid refresh token");
   }
 
   if (new Date() > user.refreshTokenExpiry) {
-    throw new ApiError(401, 'Refresh token expired');
+    throw new ApiError(401, "Refresh token expired");
   }
 
-  const accessToken = generateAccessToken({ 
-    id: user.id, 
+  const accessToken = generateAccessToken({
+    id: user.id,
     email: user.email,
-    role: user.role 
+    role: user.role,
   });
 
-  logger.info('Access token refreshed', { userId: user.id });
+  logger.info("Access token refreshed", { userId: user.id });
 
   return { accessToken };
 };
 
 export const verifyEmail = async (token) => {
   if (!token) {
-    throw new ApiError(400, 'Verification token required');
+    throw new ApiError(400, "Verification token required");
   }
 
   const user = await prisma.user.findFirst({
     where: {
       emailVerificationToken: token,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   if (!user) {
-    throw new ApiError(400, 'Invalid verification token');
+    throw new ApiError(400, "Invalid verification token");
   }
 
   if (new Date() > user.emailVerificationTokenExpiry) {
-    throw new ApiError(400, 'Verification token expired');
+    throw new ApiError(400, "Verification token expired");
   }
 
   if (user.isEmailVerified) {
-    throw new ApiError(400, 'Email already verified');
+    throw new ApiError(400, "Email already verified");
   }
 
   await prisma.user.update({
@@ -208,33 +206,33 @@ export const verifyEmail = async (token) => {
     data: {
       isEmailVerified: true,
       emailVerificationToken: null,
-      emailVerificationTokenExpiry: null
-    }
+      emailVerificationTokenExpiry: null,
+    },
   });
 
-  sendWelcomeEmail(user.email, user.fullName).catch(err => {
-    logger.error('Failed to send welcome email', { error: err.message });
+  sendWelcomeEmail(user.email, user.fullName).catch((err) => {
+    logger.error("Failed to send welcome email", { error: err.message });
   });
 
-  logger.info('Email verified', { userId: user.id, email: user.email });
+  logger.info("Email verified", { userId: user.id, email: user.email });
 
-  return { message: 'Email verified successfully!' };
+  return { message: "Email verified successfully!" };
 };
 
 export const resendVerificationEmail = async (email) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       email,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!user) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, "User not found");
   }
 
   if (user.isEmailVerified) {
-    throw new ApiError(400, 'Email already verified');
+    throw new ApiError(400, "Email already verified");
   }
 
   const verificationToken = generateEmailVerificationToken({ email });
@@ -244,27 +242,29 @@ export const resendVerificationEmail = async (email) => {
     where: { id: user.id },
     data: {
       emailVerificationToken: verificationToken,
-      emailVerificationTokenExpiry: verificationTokenExpiry
-    }
+      emailVerificationTokenExpiry: verificationTokenExpiry,
+    },
   });
 
   await sendVerificationEmail(email, user.fullName, verificationToken);
 
-  logger.info('Verification email resent', { userId: user.id, email });
+  logger.info("Verification email resent", { userId: user.id, email });
 
-  return { message: 'Verification email sent!' };
+  return { message: "Verification email sent!" };
 };
 
 export const forgotPassword = async (email) => {
   const user = await prisma.user.findUnique({
-    where: { 
+    where: {
       email,
-      deletedAt: null 
-    }
+      deletedAt: null,
+    },
   });
 
   if (!user) {
-    return { message: 'If an account exists, a password reset link has been sent.' };
+    return {
+      message: "If an account exists, a password reset link has been sent.",
+    };
   }
 
   const resetToken = generatePasswordResetToken({ email });
@@ -274,35 +274,37 @@ export const forgotPassword = async (email) => {
     where: { id: user.id },
     data: {
       forgotPasswordToken: resetToken,
-      forgotPasswordTokenExpiry: resetTokenExpiry
-    }
+      forgotPasswordTokenExpiry: resetTokenExpiry,
+    },
   });
 
   await sendPasswordResetEmail(email, user.fullName, resetToken);
 
-  logger.info('Password reset requested', { userId: user.id, email });
+  logger.info("Password reset requested", { userId: user.id, email });
 
-  return { message: 'If an account exists, a password reset link has been sent.' };
+  return {
+    message: "If an account exists, a password reset link has been sent.",
+  };
 };
 
 export const resetPassword = async (token, newPassword) => {
   if (!token) {
-    throw new ApiError(400, 'Reset token required');
+    throw new ApiError(400, "Reset token required");
   }
 
   const user = await prisma.user.findFirst({
     where: {
       forgotPasswordToken: token,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   if (!user) {
-    throw new ApiError(400, 'Invalid or expired reset token');
+    throw new ApiError(400, "Invalid or expired reset token");
   }
 
   if (new Date() > user.forgotPasswordTokenExpiry) {
-    throw new ApiError(400, 'Reset token expired');
+    throw new ApiError(400, "Reset token expired");
   }
 
   const hashedPassword = await hashPassword(newPassword);
@@ -312,13 +314,16 @@ export const resetPassword = async (token, newPassword) => {
     data: {
       password: hashedPassword,
       forgotPasswordToken: null,
-      forgotPasswordTokenExpiry: null
-    }
+      forgotPasswordTokenExpiry: null,
+    },
   });
 
-  logger.info('Password reset successful', { userId: user.id, email: user.email });
+  logger.info("Password reset successful", {
+    userId: user.id,
+    email: user.email,
+  });
 
-  return { message: 'Password reset successful!' };
+  return { message: "Password reset successful!" };
 };
 
 export const logout = async (userId) => {
@@ -326,11 +331,11 @@ export const logout = async (userId) => {
     where: { id: userId },
     data: {
       refreshToken: null,
-      refreshTokenExpiry: null
-    }
+      refreshTokenExpiry: null,
+    },
   });
 
-  logger.info('User logged out', { userId });
+  logger.info("User logged out", { userId });
 
-  return { message: 'Logged out successfully' };
+  return { message: "Logged out successfully" };
 };
