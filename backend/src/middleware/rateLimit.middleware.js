@@ -1,18 +1,18 @@
-import { prisma } from '../config/database.config.js';
-import { ApiError } from '../utils/apiError.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import logger from '../utils/logger.js';
+import { prisma } from "../config/database.config.js";
+import { ApiError } from "../utils/apiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import logger from "../utils/logger.js";
 
 export const rateLimit = (options = {}) => {
   const {
-    windowMs = 60 * 1000,      // 1 minute default
-    maxRequests = 10,      // 10 requests default
-    action = 'submission'
+    windowMs = 60 * 1000,
+    maxRequests = 1000,
+    action = "submission",
   } = options;
 
   return asyncHandler(async (req, res, next) => {
     if (!req.user) {
-      throw new ApiError(401, 'Authentication required');
+      throw new ApiError(401, "Authentication required");
     }
 
     const userId = req.user.id;
@@ -24,9 +24,9 @@ export const rateLimit = (options = {}) => {
         userId,
         action,
         windowStart: {
-          gte: windowStart
-        }
-      }
+          gte: windowStart,
+        },
+      },
     });
 
     if (!rateLimit) {
@@ -36,28 +36,30 @@ export const rateLimit = (options = {}) => {
           action,
           count: 1,
           windowStart: now,
-          lastAttemptAt: now
-        }
+          lastAttemptAt: now,
+        },
       });
 
-      logger.info('Rate limit window created', { userId, action });
+      logger.info("Rate limit window created", { userId, action });
       return next();
     }
 
     if (rateLimit.count >= maxRequests) {
       const resetTime = new Date(rateLimit.windowStart.getTime() + windowMs);
-      const secondsUntilReset = Math.ceil((resetTime.getTime() - now.getTime()) / 1000);
+      const secondsUntilReset = Math.ceil(
+        (resetTime.getTime() - now.getTime()) / 1000,
+      );
 
-      logger.warn('Rate limit exceeded', { 
-        userId, 
-        action, 
+      logger.warn("Rate limit exceeded", {
+        userId,
+        action,
         count: rateLimit.count,
-        maxRequests 
+        maxRequests,
       });
 
       throw new ApiError(
-        429, 
-        `Too many requests. Please try again in ${secondsUntilReset} seconds.`
+        429,
+        `Too many requests. Please try again in ${secondsUntilReset} seconds.`,
       );
     }
 
@@ -65,15 +67,15 @@ export const rateLimit = (options = {}) => {
       where: { id: rateLimit.id },
       data: {
         count: { increment: 1 },
-        lastAttemptAt: now
-      }
+        lastAttemptAt: now,
+      },
     });
 
-    logger.info('Rate limit checked', { 
-      userId, 
-      action, 
+    logger.info("Rate limit checked", {
+      userId,
+      action,
       count: rateLimit.count + 1,
-      maxRequests 
+      maxRequests,
     });
 
     next();
@@ -82,17 +84,17 @@ export const rateLimit = (options = {}) => {
 export const cleanupRateLimits = async () => {
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
+
     const deleted = await prisma.rateLimit.deleteMany({
       where: {
         windowStart: {
-          lt: oneDayAgo
-        }
-      }
+          lt: oneDayAgo,
+        },
+      },
     });
 
-    logger.info('Rate limits cleaned up', { deletedCount: deleted.count });
+    logger.info("Rate limits cleaned up", { deletedCount: deleted.count });
   } catch (error) {
-    logger.error('Failed to cleanup rate limits', { error: error.message });
+    logger.error("Failed to cleanup rate limits", { error: error.message });
   }
 };
