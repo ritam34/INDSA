@@ -26,10 +26,8 @@ export const sanitizePaginationParams = (page, limit) => {
   let sanitizedPage = parseInt(page) || 1;
   let sanitizedLimit = parseInt(limit) || 20;
 
-  // Ensure page is at least 1
   if (sanitizedPage < 1) sanitizedPage = 1;
 
-  // Limit max items per page to 100
   if (sanitizedLimit > 100) sanitizedLimit = 100;
   if (sanitizedLimit < 1) sanitizedLimit = 20;
 

@@ -9,6 +9,3 @@ class ApiResponse {
 }
 
 export { ApiResponse };
-
-// Usage examples:
-// return res.status(200).json(new ApiResponse(200, user, "User fetched successfully"));
